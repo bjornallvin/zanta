@@ -1,6 +1,7 @@
 "use client";
 
 import Snowfall from "./Snowfall";
+import ChristmasFooter from "./ChristmasFooter";
 
 interface ChristmasLayoutProps {
   children: React.ReactNode;
@@ -28,9 +29,12 @@ export default function ChristmasLayout({ children }: ChristmasLayoutProps) {
       <Snowfall />
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 pb-24">
         {children}
       </div>
+
+      {/* Footer */}
+      <ChristmasFooter />
     </div>
   );
 }
