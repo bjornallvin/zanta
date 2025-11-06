@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import ChristmasLayout from "@/components/ChristmasLayout";
 
@@ -13,8 +13,42 @@ export default function RevealPage() {
   const [budgetMessage, setBudgetMessage] = useState("");
   const [eventDetails, setEventDetails] = useState("");
   const [participantName, setParticipantName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Check on load if already revealed
+  useEffect(() => {
+    const checkIfRevealed = async () => {
+      try {
+        const response = await fetch(`/api/reveal/${participantId}`, {
+          method: "POST",
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to load assignment");
+        }
+
+        const data = await response.json();
+
+        // If the participant has already revealed, show the result
+        if (data.alreadyRevealed || data.assignedName) {
+          setAssignedName(data.assignedName);
+          setBudgetMessage(data.budgetMessage);
+          setEventDetails(data.eventDetails);
+          setParticipantName(data.participantName);
+          setRevealed(true);
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to load. Please try again.");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkIfRevealed();
+  }, [participantId]);
 
   const handleReveal = async () => {
     setIsLoading(true);
@@ -48,7 +82,17 @@ export default function RevealPage() {
     <ChristmasLayout>
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-2xl p-8 border-4 border-green-500/20">
-          {!revealed ? (
+          {isLoading && !revealed ? (
+            <div className="text-center">
+              <div className="text-7xl mb-6 animate-bounce">🎁</div>
+              <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-300">
+                Loading your Secret Santa...
+              </h1>
+              <div className="animate-pulse text-gray-500 dark:text-gray-400">
+                ✨ Please wait ✨
+              </div>
+            </div>
+          ) : !revealed ? (
             <div className="text-center">
               <div className="text-7xl mb-6 animate-float">🎁</div>
               <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
@@ -69,11 +113,11 @@ export default function RevealPage() {
               disabled={isLoading}
               className="w-full py-4 bg-gradient-to-r from-red-500 to-green-500 text-white font-semibold text-lg rounded-lg hover:from-red-600 hover:to-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
             >
-              {isLoading ? "Revealing..." : "🎅 Reveal My Secret Santa"}
+              🎅 Reveal My Secret Santa
             </button>
 
             <p className="mt-6 text-xs text-gray-500 dark:text-gray-400">
-              You can only reveal once, so make sure you're ready!
+              Click to reveal your assignment!
             </p>
           </div>
         ) : (
