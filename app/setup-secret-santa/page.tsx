@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChristmasLayout from "@/components/ChristmasLayout";
 
 interface GeneratedLink {
   name: string;
   url: string;
+}
+
+interface Participant {
+  id: string;
+  name: string;
+  hasRevealed: boolean;
+}
+
+interface CurrentEvent {
+  participants: Participant[];
+  budgetMessage: string;
+  eventDetails: string;
+  createdAt: number;
 }
 
 export default function SetupPage() {
@@ -24,8 +37,31 @@ export default function SetupPage() {
     "Julbord on November 28th at 18:15\nVenue: Kristinehovs Malmgård, Kristinehovsgatan 2, 117 29 Stockholm\nPresents to be exchanged there!"
   );
   const [generatedLinks, setGeneratedLinks] = useState<GeneratedLink[]>([]);
+  const [currentEvent, setCurrentEvent] = useState<CurrentEvent | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   const [error, setError] = useState("");
+
+  // Load current event on mount
+  useEffect(() => {
+    const loadCurrentEvent = async () => {
+      try {
+        const response = await fetch("/api/event-status");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.event) {
+            setCurrentEvent(data.event);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load current event:", err);
+      } finally {
+        setIsLoadingEvent(false);
+      }
+    };
+
+    loadCurrentEvent();
+  }, []);
 
   const handleNameChange = (index: number, value: string) => {
     const newNames = [...participantNames];
@@ -137,6 +173,7 @@ export default function SetupPage() {
 
       // Reset form state
       setGeneratedLinks([]);
+      setCurrentEvent(null);
       setParticipantNames(["", "", "", "", "", ""]);
       setBudgetMessage("Suggested budget: 200 SEK");
       setEventDetails("Julbord on November 28th at 18:15\nVenue: Kristinehovs Malmgård, Kristinehovsgatan 2, 117 29 Stockholm\nPresents to be exchanged there!");
@@ -162,6 +199,51 @@ export default function SetupPage() {
             <p className="text-center text-gray-600 dark:text-gray-400 mb-8 text-lg">
               ✨ Create your magical Secret Santa event ✨
             </p>
+
+            {/* Current Event Status */}
+            {!isLoadingEvent && currentEvent && (
+              <div className="mb-8 p-6 bg-gradient-to-r from-green-50 to-red-50 dark:from-green-950 dark:to-red-950 rounded-lg border-2 border-green-300 dark:border-green-700">
+                <h2 className="text-2xl font-bold mb-4 text-center text-green-700 dark:text-green-300">
+                  🎄 Current Event Status
+                </h2>
+
+                <div className="mb-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    <strong>Created:</strong> {new Date(currentEvent.createdAt).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    <strong>Budget:</strong> {currentEvent.budgetMessage}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                    <strong>Event:</strong> {currentEvent.eventDetails}
+                  </p>
+                </div>
+
+                <h3 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                  Participants ({currentEvent.participants.filter(p => p.hasRevealed).length}/{currentEvent.participants.length} revealed):
+                </h3>
+
+                <div className="space-y-2">
+                  {currentEvent.participants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        participant.hasRevealed
+                          ? "bg-green-100 dark:bg-green-900 border-2 border-green-300 dark:border-green-700"
+                          : "bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600"
+                      }`}
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200">
+                        {participant.name}
+                      </span>
+                      <span className="text-sm">
+                        {participant.hasRevealed ? "✅ Revealed" : "⏳ Waiting"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           {!generatedLinks.length ? (
             <form onSubmit={handleSubmit}>
