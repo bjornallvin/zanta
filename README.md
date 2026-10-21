@@ -117,6 +117,7 @@ Any draw can be deleted for good.
 │   │   ├── archive-draw/         # archive the active draw (admin)
 │   │   ├── activate-draw/        # make an archived draw active (admin)
 │   │   ├── update-draw/          # edit an archived draw (admin)
+│   │   ├── reset-draw/           # new links and matches, old links die (admin)
 │   │   ├── delete-draw/          # delete a draw (admin)
 │   │   └── reveal/[id]/          # read or reveal one person's match
 │   ├── setup-secret-santa/

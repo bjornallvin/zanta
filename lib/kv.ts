@@ -213,6 +213,39 @@ export async function updateDraw(id: string, edit: DrawEdit): Promise<{ draw: Dr
   return { draw: updated, redrawn };
 }
 
+// Gives everyone a new link and a new match; the old links stop working.
+// Names, budget and details stay.
+export async function resetDraw(id: string): Promise<Draw> {
+  const draw = await getDraw(id);
+  if (!draw) throw new DrawNotFoundError();
+
+  const old = await getParticipants(draw);
+  const people = old.map((p) => ({ id: generateUniqueId(), name: p.name }));
+  const circle = shuffle(people);
+  const next = new Map(circle.map((p, i) => [p.id, circle[(i + 1) % circle.length].id]));
+  const participants: Participant[] = people.map((p) => ({
+    id: p.id,
+    drawId: id,
+    name: p.name,
+    assignedTo: next.get(p.id)!,
+    hasRevealed: false,
+  }));
+
+  const updated: Draw = { ...draw, participantIds: participants.map((p) => p.id) };
+
+  const tx = kv.multi();
+  tx.set(DRAW_KEY(id), updated);
+  for (const participant of participants) {
+    tx.set(PARTICIPANT_KEY(participant.id), participant);
+  }
+  for (const pid of draw.participantIds) {
+    tx.del(PARTICIPANT_KEY(pid));
+  }
+  await tx.exec();
+
+  return updated;
+}
+
 export class DrawNotFoundError extends Error {
   constructor() {
     super("Draw not found");

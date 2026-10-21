@@ -202,6 +202,19 @@ export default function SetupPage() {
     });
   };
 
+  const handleReset = (draw: DrawSummary) => {
+    if (
+      !confirm(
+        "Reset this draw? Everyone gets a new link and a new match. The old links stop working, so you need to send everyone their new link."
+      )
+    )
+      return;
+    changeDraw("/api/reset-draw", { drawId: draw.id }, "Draw reset. Send everyone their new link.", {
+      kind: "draw",
+      id: draw.id,
+    });
+  };
+
   const handleDelete = (draw: DrawSummary) => {
     if (!confirm("Delete this draw for good? Its links stop working and it can't be brought back.")) return;
     changeDraw("/api/delete-draw", { drawId: draw.id }, "Draw deleted.", { kind: "list" });
@@ -373,9 +386,14 @@ export default function SetupPage() {
 
           <div className="actions draw-actions">
             {active ? (
-              <button className="btn btn-quiet" onClick={() => handleArchive(selected)} disabled={isLoading}>
-                Archive this draw
-              </button>
+              <>
+                <button className="btn btn-quiet" onClick={() => handleReset(selected)} disabled={isLoading}>
+                  Reset links
+                </button>
+                <button className="btn btn-quiet" onClick={() => handleArchive(selected)} disabled={isLoading}>
+                  Archive this draw
+                </button>
+              </>
             ) : (
               <button className="btn btn-quiet" onClick={() => handleActivate(selected)} disabled={isLoading}>
                 Make active
