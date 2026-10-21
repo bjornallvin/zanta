@@ -6,8 +6,9 @@ export default function Home() {
       <div className="stage">
         <h1 className="display">Secret Santa</h1>
         <p className="lead">
-          Everyone at Awolve gets a personal link. <strong>Open yours</strong> to
-          see who you&rsquo;re buying a gift for.
+          Alla på Awolve, även ni som börjar snart, får inom kort en personlig
+          länk. <strong>Öppna din när den kommer</strong> så ser du vem du ska
+          köpa julklapp till.
         </p>
       </div>
     </Shell>

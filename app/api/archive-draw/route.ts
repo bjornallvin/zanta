@@ -10,14 +10,14 @@ export async function POST(request: NextRequest) {
   try {
     const archived = await archiveActiveDraw();
     if (!archived) {
-      return NextResponse.json({ error: "There is no active draw" }, { status: 404 });
+      return NextResponse.json({ error: "Det finns ingen aktiv dragning" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, drawId: archived.id });
   } catch (error) {
     console.error("Error archiving draw:", error);
     return NextResponse.json(
-      { error: "Failed to archive draw" },
+      { error: "Det gick inte att arkivera dragningen" },
       { status: 500 }
     );
   }

@@ -17,21 +17,21 @@ export async function POST(request: NextRequest) {
       participantNames.length < 2
     ) {
       return NextResponse.json(
-        { error: "At least 2 participants are required" },
+        { error: "Minst 2 personer behövs" },
         { status: 400 }
       );
     }
 
     if (!budgetMessage || typeof budgetMessage !== "string") {
       return NextResponse.json(
-        { error: "Budget message is required" },
+        { error: "Budget saknas" },
         { status: 400 }
       );
     }
 
     if (!eventDetails || typeof eventDetails !== "string") {
       return NextResponse.json(
-        { error: "Event details are required" },
+        { error: "När och var saknas" },
         { status: 400 }
       );
     }
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
     console.error("Error creating draw:", error);
     return NextResponse.json(
-      { error: "Failed to create draw" },
+      { error: "Det gick inte att skapa dragningen" },
       { status: 500 }
     );
   }

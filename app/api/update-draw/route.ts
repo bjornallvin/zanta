@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "drawId is required" }, { status: 400 });
     }
     if (!budgetMessage || typeof budgetMessage !== "string") {
-      return NextResponse.json({ error: "Budget message is required" }, { status: 400 });
+      return NextResponse.json({ error: "Budget saknas" }, { status: 400 });
     }
     if (!eventDetails || typeof eventDetails !== "string") {
-      return NextResponse.json({ error: "Event details are required" }, { status: 400 });
+      return NextResponse.json({ error: "När och var saknas" }, { status: 400 });
     }
 
     const valid =
@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
           (p.id === undefined || typeof p.id === "string")
       );
     if (!valid || people.length < 2) {
-      return NextResponse.json({ error: "At least 2 people are required" }, { status: 400 });
+      return NextResponse.json({ error: "Minst 2 personer behövs" }, { status: 400 });
     }
 
     const cleaned = people.map((p: { id?: string; name: string }) => ({ id: p.id, name: p.name.trim() }));
     if (new Set(cleaned.map((p: { name: string }) => p.name.toLowerCase())).size !== cleaned.length) {
-      return NextResponse.json({ error: "Two people have the same name" }, { status: 400 });
+      return NextResponse.json({ error: "Två personer har samma namn" }, { status: 400 });
     }
 
     const { redrawn } = await updateDraw(drawId, {
@@ -50,6 +50,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     console.error("Error updating draw:", error);
-    return NextResponse.json({ error: "Failed to update draw" }, { status: 500 });
+    return NextResponse.json({ error: "Det gick inte att spara dragningen" }, { status: 500 });
   }
 }

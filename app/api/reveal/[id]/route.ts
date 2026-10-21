@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DrawArchivedError, getDraw, getParticipant, revealAssignment } from "@/lib/kv";
 
-const NOT_FOUND = "This link doesn't match a Secret Santa draw. Check that you copied the whole link.";
+const NOT_FOUND = "Länken hör inte till någon Secret Santa-dragning. Kontrollera att du kopierade hela länken.";
 
 function failure(error: unknown, fallback: string) {
   if (error instanceof DrawArchivedError) {
@@ -47,7 +47,7 @@ export async function GET(
       eventDetails: draw.eventDetails,
     });
   } catch (error) {
-    return failure(error, "Failed to load your link");
+    return failure(error, "Det gick inte att öppna din länk");
   }
 }
 
@@ -72,6 +72,6 @@ export async function POST(
       participantName: participant.name,
     });
   } catch (error) {
-    return failure(error, "Failed to reveal assignment");
+    return failure(error, "Det gick inte att visa vem du ska köpa till");
   }
 }

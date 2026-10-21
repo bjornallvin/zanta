@@ -14,14 +14,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!(await deleteDraw(drawId))) {
-      return NextResponse.json({ error: "Draw not found" }, { status: 404 });
+      return NextResponse.json({ error: "Dragningen hittades inte" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting draw:", error);
     return NextResponse.json(
-      { error: "Failed to delete draw" },
+      { error: "Det gick inte att radera dragningen" },
       { status: 500 }
     );
   }

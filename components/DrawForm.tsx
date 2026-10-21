@@ -37,18 +37,18 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
     setError("");
 
     const filled = people.map((p) => ({ ...p, name: p.name.trim() })).filter((p) => p.name);
-    if (filled.length < 2) return setError("Add at least 2 people.");
+    if (filled.length < 2) return setError("Lägg till minst 2 personer.");
     if (new Set(filled.map((p) => p.name.toLowerCase())).size !== filled.length) {
-      return setError("Two people have the same name. Add a last name or initial so everyone can tell them apart.");
+      return setError("Två personer har samma namn. Lägg till efternamn eller initial så att alla kan skilja dem åt.");
     }
-    if (!budgetMessage.trim()) return setError("Add a budget.");
-    if (!eventDetails.trim()) return setError("Add when and where the gifts are exchanged.");
+    if (!budgetMessage.trim()) return setError("Lägg till en budget.");
+    if (!eventDetails.trim()) return setError("Lägg till när och var julklapparna delas ut.");
 
     setBusy(true);
     try {
       await onSubmit({ people: filled, budgetMessage: budgetMessage.trim(), eventDetails: eventDetails.trim() });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "That didn't work. Try again.");
+      setError(err instanceof Error ? err.message : "Det gick inte. Försök igen.");
     } finally {
       setBusy(false);
     }
@@ -58,7 +58,7 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
     <form onSubmit={handleSubmit}>
       <fieldset className="field">
         <legend className="field-label">
-          People <span className="field-hint">({people.filter((p) => p.name.trim()).length} added)</span>
+          Personer <span className="field-hint">({people.filter((p) => p.name.trim()).length} tillagda)</span>
         </legend>
         <div className="people">
           {people.map((person, index) => (
@@ -68,7 +68,7 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
                 className="input"
                 value={person.name}
                 onChange={(e) => rename(index, e.target.value)}
-                placeholder="Name"
+                placeholder="Namn"
                 aria-label={`Person ${index + 1}`}
               />
               {people.length > 2 && (
@@ -76,7 +76,7 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
                   type="button"
                   className="person-remove"
                   onClick={() => remove(index)}
-                  aria-label={`Remove ${person.name || `person ${index + 1}`}`}
+                  aria-label={`Ta bort ${person.name || `person ${index + 1}`}`}
                 >
                   &times;
                 </button>
@@ -85,7 +85,7 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
           ))}
         </div>
         <button type="button" className="link add-person" onClick={() => setPeople([...people, { name: "" }])}>
-          Add a person
+          Lägg till en person
         </button>
       </fieldset>
 
@@ -96,17 +96,17 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
           className="input"
           value={budgetMessage}
           onChange={(e) => setBudgetMessage(e.target.value)}
-          placeholder="Around 200 SEK"
+          placeholder="Runt 200 kr"
         />
       </label>
 
       <label className="field">
-        <span className="field-label">When and where</span>
+        <span className="field-label">När och var</span>
         <textarea
           className="input"
           value={eventDetails}
           onChange={(e) => setEventDetails(e.target.value)}
-          placeholder={"Christmas dinner, 12 December at 18:00\nGifts are opened after dessert"}
+          placeholder={"Julbord 12 december kl. 18.00\nJulklapparna öppnas efter efterrätten"}
           rows={3}
         />
       </label>
@@ -120,7 +120,7 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
         </button>
         {onCancel && (
           <button type="button" className="btn btn-quiet" onClick={onCancel} disabled={busy}>
-            Cancel
+            Avbryt
           </button>
         )}
       </div>

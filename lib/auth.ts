@@ -13,5 +13,5 @@ export function requireAdmin(request: NextRequest): NextResponse | null {
     if (a.length === b.length && timingSafeEqual(a, b)) return null;
   }
 
-  return NextResponse.json({ error: "Wrong admin password" }, { status: 401 });
+  return NextResponse.json({ error: "Fel adminlösenord" }, { status: 401 });
 }

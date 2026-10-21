@@ -25,13 +25,13 @@ type View = { kind: "list" } | { kind: "draw"; id: string } | { kind: "new" };
 
 const NEW_DRAW: DrawFormValues = {
   people: Array.from({ length: 6 }, () => ({ name: "" })),
-  budgetMessage: "Around 200 SEK",
+  budgetMessage: "Runt 200 kr",
   eventDetails: "",
 };
 const PASSWORD_KEY = "zanta-admin-password";
 
 const formatDate = (ms: number) =>
-  new Date(ms).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  new Date(ms).toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" });
 
 const openedCount = (draw: DrawSummary) => draw.participants.filter((p) => p.hasRevealed).length;
 
@@ -78,7 +78,7 @@ export default function SetupPage() {
       headers: { ...init.headers, "x-admin-password": pw },
     });
     if (response.status === 401) {
-      lock("Wrong password. Try again.");
+      lock("Fel lösenord. Försök igen.");
       throw new Error("Unauthorized");
     }
     return response;
@@ -92,7 +92,7 @@ export default function SetupPage() {
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "That didn't work. Try again.");
+    if (!response.ok) throw new Error(data.error || "Det gick inte. Försök igen.");
     return data;
   };
 
@@ -147,7 +147,7 @@ export default function SetupPage() {
     });
     await loadDraws(password);
     go({ kind: "draw", id: drawId });
-    setMessage("Draw created. Copy each person's link and send it to them.");
+    setMessage("Dragningen är skapad. Kopiera varje persons länk och skicka den till dem.");
   };
 
   const handleUpdate = async (draw: DrawSummary, values: DrawFormValues) => {
@@ -157,8 +157,8 @@ export default function SetupPage() {
     const opened = openedCount(draw);
     if (draw.status === "active" && peopleChanged && opened > 0) {
       const ok = confirm(
-        `${opened} ${opened === 1 ? "person has" : "people have"} already opened their link. ` +
-          "Changing the people gives everyone a new match, so they will see a different person. Save anyway?"
+        `${opened} ${opened === 1 ? "person har" : "personer har"} redan öppnat sin länk. ` +
+          "Ändrar du personerna får alla en ny match, så de kommer att se en annan person. Spara ändå?"
       );
       if (!ok) return;
     }
@@ -166,7 +166,9 @@ export default function SetupPage() {
     setMessage("");
     const { redrawn } = await post("/api/update-draw", { drawId: draw.id, ...values });
     await loadDraws(password);
-    setMessage(redrawn ? "Draw saved. The people changed, so everyone has a new match." : "Draw saved.");
+    setMessage(
+      redrawn ? "Dragningen är sparad. Personerna ändrades, så alla har fått en ny match." : "Dragningen är sparad."
+    );
   };
 
   // Archive, activate or delete, then reload
@@ -180,23 +182,23 @@ export default function SetupPage() {
       setView(after);
       setMessage(done);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "That didn't work. Try again.");
+      setError(err instanceof Error ? err.message : "Det gick inte. Försök igen.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleArchive = (draw: DrawSummary) => {
-    if (!confirm("Archive this draw? Its links stop working until you make it active again.")) return;
-    changeDraw("/api/archive-draw", undefined, "Draw archived.", { kind: "draw", id: draw.id });
+    if (!confirm("Arkivera dragningen? Länkarna slutar fungera tills du gör den aktiv igen.")) return;
+    changeDraw("/api/archive-draw", undefined, "Dragningen är arkiverad.", { kind: "draw", id: draw.id });
   };
 
   const handleActivate = (draw: DrawSummary) => {
     const question = draws.some((d) => d.status === "active")
-      ? "Make this draw active? The current draw gets archived and its links stop working."
-      : "Make this draw active? Its links start working again.";
+      ? "Gör dragningen aktiv? Den nuvarande dragningen arkiveras och dess länkar slutar fungera."
+      : "Gör dragningen aktiv? Länkarna börjar fungera igen.";
     if (!confirm(question)) return;
-    changeDraw("/api/activate-draw", { drawId: draw.id }, "Draw is active. Its links work again.", {
+    changeDraw("/api/activate-draw", { drawId: draw.id }, "Dragningen är aktiv. Länkarna fungerar igen.", {
       kind: "draw",
       id: draw.id,
     });
@@ -205,19 +207,19 @@ export default function SetupPage() {
   const handleReset = (draw: DrawSummary) => {
     if (
       !confirm(
-        "Reset this draw? Everyone gets a new link and a new match. The old links stop working, so you need to send everyone their new link."
+        "Återställ dragningen? Alla får en ny länk och en ny match. De gamla länkarna slutar fungera, så du måste skicka de nya länkarna till alla."
       )
     )
       return;
-    changeDraw("/api/reset-draw", { drawId: draw.id }, "Draw reset. Send everyone their new link.", {
+    changeDraw("/api/reset-draw", { drawId: draw.id }, "Dragningen är återställd. Skicka de nya länkarna till alla.", {
       kind: "draw",
       id: draw.id,
     });
   };
 
   const handleDelete = (draw: DrawSummary) => {
-    if (!confirm("Delete this draw for good? Its links stop working and it can't be brought back.")) return;
-    changeDraw("/api/delete-draw", { drawId: draw.id }, "Draw deleted.", { kind: "list" });
+    if (!confirm("Radera dragningen för gott? Länkarna slutar fungera och den går inte att få tillbaka.")) return;
+    changeDraw("/api/delete-draw", { drawId: draw.id }, "Dragningen är raderad.", { kind: "list" });
   };
 
   const copy = async (key: string, text: string) => {
@@ -233,10 +235,10 @@ export default function SetupPage() {
       <Shell>
         <div className="stage">
           <h1 className="title">Secret Santa admin</h1>
-          <p className="lead">Enter the admin password to manage the draws.</p>
+          <p className="lead">Ange adminlösenordet för att hantera dragningarna.</p>
           <form onSubmit={handleUnlock} style={{ marginTop: "2.5rem", maxWidth: "24rem" }}>
             <label className="field">
-              <span className="field-label">Password</span>
+              <span className="field-label">Lösenord</span>
               <input
                 type="password"
                 className="input"
@@ -248,7 +250,7 @@ export default function SetupPage() {
             </label>
             {gateError && <p className="notice">{gateError}</p>}
             <button type="submit" className="btn btn-primary" disabled={isLoadingDraws || !passwordInput}>
-              {isLoadingDraws ? "Checking" : "Unlock"}
+              {isLoadingDraws ? "Kontrollerar" : "Lås upp"}
             </button>
           </form>
         </div>
@@ -268,7 +270,7 @@ export default function SetupPage() {
 
   const back = (
     <button className="link back-link" onClick={() => go({ kind: "list" })}>
-      Back to all draws
+      Tillbaka till alla dragningar
     </button>
   );
 
@@ -278,13 +280,13 @@ export default function SetupPage() {
       <Shell>
         <div className="stage stage-wide">
           {back}
-          <h1 className="title">New draw</h1>
+          <h1 className="title">Ny dragning</h1>
           {notices}
           <div className="section" style={{ marginTop: "2rem" }}>
             <DrawForm
               initial={NEW_DRAW}
-              submitLabel="Create the draw"
-              busyLabel="Creating the draw"
+              submitLabel="Skapa dragningen"
+              busyLabel="Skapar dragningen"
               onSubmit={handleCreate}
               onCancel={() => go({ kind: "list" })}
             />
@@ -305,22 +307,22 @@ export default function SetupPage() {
         <div className="stage stage-wide">
           {back}
           <div className="draw-head">
-            <h1 className="title">Draw from {formatDate(selected.createdAt)}</h1>
-            <span className={`pill${active ? " pill-active" : ""}`}>{active ? "Active" : "Archived"}</span>
+            <h1 className="title">Dragning {formatDate(selected.createdAt)}</h1>
+            <span className={`pill${active ? " pill-active" : ""}`}>{active ? "Aktiv" : "Arkiverad"}</span>
           </div>
           <p className="fine" style={{ marginTop: "0.75rem" }}>
             {active
-              ? "Links work. Send each person their own link."
-              : `Links are closed${selected.archivedAt ? ` since ${formatDate(selected.archivedAt)}` : ""}. Make the draw active to open them again.`}
+              ? "Länkarna fungerar. Skicka varje person sin egen länk."
+              : `Länkarna är stängda${selected.archivedAt ? ` sedan ${formatDate(selected.archivedAt)}` : ""}. Gör dragningen aktiv för att öppna dem igen.`}
           </p>
           {notices}
 
           {active && (
             <section className="section" aria-labelledby="links-title">
               <div className="section-head">
-                <h2 id="links-title" className="section-title">Links</h2>
+                <h2 id="links-title" className="section-title">Länkar</h2>
                 <p className="fine">
-                  {opened} of {total} have opened their link
+                  {opened} av {total} har öppnat sin länk
                 </p>
               </div>
               <div
@@ -329,20 +331,20 @@ export default function SetupPage() {
                 aria-valuemin={0}
                 aria-valuemax={total}
                 aria-valuenow={opened}
-                aria-label="Links opened"
+                aria-label="Öppnade länkar"
               >
                 <span style={{ width: `${total ? (opened / total) * 100 : 0}%` }} />
               </div>
 
               <div className="links-head">
-                <p className="fine">Each link belongs to one person. Send it only to them.</p>
+                <p className="fine">Varje länk hör till en person. Skicka den bara till hen.</p>
                 <button
                   className="btn btn-quiet"
                   onClick={() =>
                     copy("all", selected.participants.map((p) => `${p.name}: ${linkFor(p)}`).join("\n"))
                   }
                 >
-                  {copied === "all" ? "Copied" : "Copy all links"}
+                  {copied === "all" ? "Kopierat" : "Kopiera alla länkar"}
                 </button>
               </div>
               <ul className="links">
@@ -352,11 +354,11 @@ export default function SetupPage() {
                       <span className={`dot${p.hasRevealed ? " on" : ""}`} />
                       {p.name}
                       <span className="sr-only">
-                        {p.hasRevealed ? " has opened their link" : " has not opened their link yet"}
+                        {p.hasRevealed ? " har öppnat sin länk" : " har inte öppnat sin länk än"}
                       </span>
                     </span>
                     <button className="btn btn-quiet" onClick={() => copy(p.id, linkFor(p))}>
-                      {copied === p.id ? "Copied" : "Copy link"}
+                      {copied === p.id ? "Kopierat" : "Kopiera länk"}
                     </button>
                     <span className="url">{linkFor(p)}</span>
                   </li>
@@ -368,7 +370,7 @@ export default function SetupPage() {
 
           <section className="section" aria-labelledby="edit-title">
             <h2 id="edit-title" className="section-title" style={{ marginBottom: "1.5rem" }}>
-              People and details
+              Personer och detaljer
             </h2>
             <DrawForm
               key={`${selected.id}-${selected.budgetMessage}-${selected.eventDetails}-${selected.participants.map((p) => p.id + p.name).join()}`}
@@ -377,9 +379,9 @@ export default function SetupPage() {
                 budgetMessage: selected.budgetMessage,
                 eventDetails: selected.eventDetails,
               }}
-              submitLabel="Save changes"
-              busyLabel="Saving"
-              note="Renaming keeps everyone's match. Adding or removing people makes a new draw for everyone: the links stay the same, but who buys for whom changes."
+              submitLabel="Spara ändringar"
+              busyLabel="Sparar"
+              note="Byter du namn behåller alla sin match. Lägger du till eller tar bort personer blir det en ny dragning för alla: länkarna är desamma, men vem som köper till vem ändras."
               onSubmit={(values) => handleUpdate(selected, values)}
             />
           </section>
@@ -388,19 +390,19 @@ export default function SetupPage() {
             {active ? (
               <>
                 <button className="btn btn-quiet" onClick={() => handleReset(selected)} disabled={isLoading}>
-                  Reset links
+                  Återställ länkar
                 </button>
                 <button className="btn btn-quiet" onClick={() => handleArchive(selected)} disabled={isLoading}>
-                  Archive this draw
+                  Arkivera dragningen
                 </button>
               </>
             ) : (
               <button className="btn btn-quiet" onClick={() => handleActivate(selected)} disabled={isLoading}>
-                Make active
+                Gör aktiv
               </button>
             )}
             <button className="btn btn-danger" onClick={() => handleDelete(selected)} disabled={isLoading}>
-              Delete
+              Radera
             </button>
           </div>
         </div>
@@ -414,25 +416,25 @@ export default function SetupPage() {
       <div className="stage stage-wide">
         <h1 className="title">Secret Santa admin</h1>
         <p className="lead">
-          One draw is active at a time. Nobody, including you, can see who got whom.
+          En dragning är aktiv åt gången. Ingen, inte ens du, kan se vem som fick vem.
         </p>
         {notices}
 
         <section className="section" aria-labelledby="draws-title">
           <div className="section-head">
-            <h2 id="draws-title" className="section-title">Draws</h2>
+            <h2 id="draws-title" className="section-title">Dragningar</h2>
             <button className="btn btn-primary btn-small" onClick={() => go({ kind: "new" })} disabled={hasActive}>
-              New draw
+              Ny dragning
             </button>
           </div>
           {hasActive && (
             <p className="fine" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
-              To start a new draw, archive the active one first.
+              Arkivera den aktiva dragningen för att starta en ny.
             </p>
           )}
 
           {!isLoadingDraws && draws.length === 0 && (
-            <p className="fine">No draws yet. Create one to get everyone&rsquo;s links.</p>
+            <p className="fine">Inga dragningar än. Skapa en för att få allas länkar.</p>
           )}
 
           <ul className="draw-list">
@@ -443,11 +445,11 @@ export default function SetupPage() {
                   <button className={`draw-row${active ? " is-active" : ""}`} onClick={() => go({ kind: "draw", id: draw.id })}>
                     <span className="draw-row-top">
                       <span className="draw-row-date">{formatDate(draw.createdAt)}</span>
-                      <span className={`pill${active ? " pill-active" : ""}`}>{active ? "Active" : "Archived"}</span>
+                      <span className={`pill${active ? " pill-active" : ""}`}>{active ? "Aktiv" : "Arkiverad"}</span>
                     </span>
                     <span className="draw-row-people">{draw.participants.map((p) => p.name).join(", ")}</span>
                     <span className="draw-row-meta">
-                      {openedCount(draw)} of {draw.participants.length} opened their link. {draw.budgetMessage}.
+                      {openedCount(draw)} av {draw.participants.length} har öppnat sin länk. {draw.budgetMessage}
                     </span>
                   </button>
                 </li>

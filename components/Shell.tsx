@@ -12,7 +12,7 @@ export default function Shell({ children, flare = false }: ShellProps) {
       <Sky flare={flare} />
       <div className="shell">
         <header className="shell-header">
-          <Link href="/" aria-label="Awolve Secret Santa home">
+          <Link href="/" aria-label="Awolve Secret Santa, startsida">
             <img src="/awolve-logo.svg" alt="awolve" />
           </Link>
         </header>

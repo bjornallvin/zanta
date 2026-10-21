@@ -20,6 +20,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     console.error("Error activating draw:", error);
-    return NextResponse.json({ error: "Failed to activate draw" }, { status: 500 });
+    return NextResponse.json({ error: "Det gick inte att göra dragningen aktiv" }, { status: 500 });
   }
 }

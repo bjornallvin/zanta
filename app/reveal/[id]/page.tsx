@@ -26,8 +26,8 @@ export default function RevealPage() {
 
   const closed: View = {
     kind: "error",
-    title: "This draw is closed",
-    message: "This link belongs to a Secret Santa draw that has been archived.",
+    title: "Dragningen är stängd",
+    message: "Länken hör till en Secret Santa-dragning som har arkiverats.",
   };
 
   useEffect(() => {
@@ -51,8 +51,8 @@ export default function RevealPage() {
       } catch (err: any) {
         setView({
           kind: "error",
-          title: "This link doesn’t work",
-          message: err.message || "Your link couldn't be loaded. Reload the page to try again.",
+          title: "Länken fungerar inte",
+          message: err.message || "Det gick inte att öppna länken. Ladda om sidan och försök igen.",
         });
       }
     };
@@ -78,7 +78,7 @@ export default function RevealPage() {
         kind: "sealed",
         participantName,
         busy: false,
-        error: err.message || "The reveal didn't go through. Try again.",
+        error: err.message || "Det gick inte att visa. Försök igen.",
       });
     }
   };
@@ -88,7 +88,7 @@ export default function RevealPage() {
   return (
     <Shell flare={view.kind === "open" && landed}>
       <div className="stage" aria-live="polite">
-        {view.kind === "loading" && <p className="greeting">Opening your link</p>}
+        {view.kind === "loading" && <p className="greeting">Öppnar din länk</p>}
 
         {view.kind === "error" && (
           <>
@@ -99,16 +99,16 @@ export default function RevealPage() {
 
         {view.kind === "sealed" && (
           <>
-            <p className="greeting">Hi {firstName(view.participantName)}. You&rsquo;re buying a gift for</p>
+            <p className="greeting">Hej {firstName(view.participantName)}! Du ska köpa julklapp till</p>
             <div className="slot">
               <button className="slab" onClick={handleReveal} disabled={view.busy}>
                 {view.busy ? (
-                  "Revealing"
+                  "Visar"
                 ) : (
                   <>
-                    <span className="slab-click">Click to reveal</span>
-                    <span className="slab-tap">Tap to reveal</span>
-                    <span className="slab-warning">Check that nobody can see your screen first</span>
+                    <span className="slab-click">Klicka för att se</span>
+                    <span className="slab-tap">Tryck för att se</span>
+                    <span className="slab-warning">Se till att ingen kan se din skärm först</span>
                   </>
                 )}
               </button>
@@ -117,14 +117,14 @@ export default function RevealPage() {
             {view.error && <p className="notice">{view.error}</p>}
 
             <p className="fine">
-              Your person stays the same every time you open this link.
+              Du får samma person varje gång du öppnar länken.
             </p>
           </>
         )}
 
         {view.kind === "open" && (
           <>
-            <p className="greeting">{firstName(view.participantName)}, you&rsquo;re buying a gift for</p>
+            <p className="greeting">{firstName(view.participantName)}, du ska köpa julklapp till</p>
             <div className="slot">
               <h1 className={`name${landed ? " landed" : ""}`}>
                 <Decode
@@ -142,13 +142,13 @@ export default function RevealPage() {
                 <dd>{view.result.budgetMessage}</dd>
               </div>
               <div>
-                <dt>When and where</dt>
+                <dt>När och var</dt>
                 <dd>{view.result.eventDetails}</dd>
               </div>
             </dl>
 
             <p className={`fine fade${landed ? " shown" : ""}`} style={{ marginTop: "2rem" }}>
-              Keep it to yourself until the gifts are opened.
+              Håll det hemligt tills julklapparna öppnas.
             </p>
           </>
         )}

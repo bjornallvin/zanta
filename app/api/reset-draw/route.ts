@@ -20,6 +20,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     console.error("Error resetting draw:", error);
-    return NextResponse.json({ error: "Failed to reset draw" }, { status: 500 });
+    return NextResponse.json({ error: "Det gick inte att återställa dragningen" }, { status: 500 });
   }
 }

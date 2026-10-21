@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching draw status:", error);
     return NextResponse.json(
-      { error: "Failed to fetch draw status" },
+      { error: "Det gick inte att hämta dragningarna" },
       { status: 500 }
     );
   }

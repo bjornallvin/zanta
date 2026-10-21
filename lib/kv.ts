@@ -38,7 +38,7 @@ const PARTICIPANT_KEY = (id: string) => `${KV_PREFIX}participant:${id}`;
 
 export class ActiveDrawExistsError extends Error {
   constructor() {
-    super("A draw is already active. Archive or delete it before creating a new one.");
+    super("En dragning är redan aktiv. Arkivera eller radera den innan du skapar en ny.");
   }
 }
 
@@ -248,7 +248,7 @@ export async function resetDraw(id: string): Promise<Draw> {
 
 export class DrawNotFoundError extends Error {
   constructor() {
-    super("Draw not found");
+    super("Dragningen hittades inte");
   }
 }
 
@@ -274,7 +274,7 @@ export async function deleteDraw(id: string): Promise<boolean> {
 
 export class DrawArchivedError extends Error {
   constructor() {
-    super("This Secret Santa draw is closed.");
+    super("Den här Secret Santa-dragningen är stängd.");
   }
 }
 

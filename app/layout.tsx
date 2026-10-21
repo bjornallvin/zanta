@@ -11,7 +11,7 @@ const satoshi = localFont({
 
 export const metadata: Metadata = {
   title: "Awolve Secret Santa",
-  description: "Awolve's Secret Santa. Open your link to see who you're buying for.",
+  description: "Awolves Secret Santa. Öppna din länk och se vem du ska köpa julklapp till.",
 };
 
 export const viewport: Viewport = {
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={satoshi.variable}>
+    <html lang="sv" className={satoshi.variable}>
       <body>{children}</body>
     </html>
   );
