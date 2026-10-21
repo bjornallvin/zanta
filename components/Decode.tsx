@@ -56,9 +56,11 @@ export default function Decode({ text, animate, onDone }: DecodeProps) {
         {chars.map((c, i) => {
           if (i < locked || c === " " || progress >= 1) return <span key={i}>{c}</span>;
           const g = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+          // The real letter keeps its space hidden, so the line never changes width
           return (
-            <span key={i} className="ch-live">
-              {c === c.toLowerCase() ? g.toLowerCase() : g}
+            <span key={i} className="ch">
+              <span className="ch-real">{c}</span>
+              <span className="ch-live">{c === c.toLowerCase() ? g.toLowerCase() : g}</span>
             </span>
           );
         })}

@@ -91,16 +91,23 @@ export default function RevealPage() {
           <>
             <p className="greeting">Hi {firstName(view.participantName)}. You&rsquo;re buying a gift for</p>
             <div className="slot">
-              <div className="slab" />
+              <button className="slab" onClick={handleReveal} disabled={view.busy}>
+                {view.busy ? (
+                  "Revealing"
+                ) : (
+                  <>
+                    <span className="slab-click">Click to reveal</span>
+                    <span className="slab-tap">Tap to reveal</span>
+                    <span className="slab-warning">Check that nobody can see your screen first</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {view.error && <p className="notice">{view.error}</p>}
 
-            <button className="btn btn-primary" onClick={handleReveal} disabled={view.busy}>
-              {view.busy ? "Revealing" : "Reveal my person"}
-            </button>
-            <p className="fine" style={{ marginTop: "1.25rem" }}>
-              Only you see this. Once revealed, it stays the same every time you open the link.
+            <p className="fine">
+              Your person stays the same every time you open this link.
             </p>
           </>
         )}

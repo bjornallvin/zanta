@@ -163,11 +163,12 @@ body {
   width: auto;
 }
 
+/* Top-aligned, not centered: content that grows (the reveal) pushes down, never moves the heading */
 .shell-main {
   display: flex;
   flex: 1;
-  align-items: center;
-  padding: 8vh 0 14vh;
+  align-items: flex-start;
+  padding: clamp(3rem, 18vh, 11rem) 0 14vh;
 }
 
 .shell-footer {
@@ -180,8 +181,19 @@ body {
   max-width: 42rem;
 }
 
+/* Admin is a working page: a frosted panel keeps every line readable over the aurora */
 .stage-wide {
   max-width: 52rem;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 24px;
+  background: rgba(5, 13, 26, 0.62);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.stage-wide .fine {
+  color: rgba(248, 250, 252, 0.78);
 }
 
 /* ---------- Type ---------- */
@@ -234,10 +246,21 @@ body {
 }
 
 .slab {
-  height: clamp(3.2rem, 12.5vw, 8.2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: clamp(7rem, 12.5vw, 8.6rem);
   width: min(100%, 30rem);
   border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: var(--snow);
+  font-size: clamp(1.25rem, 2.6vw, 1.625rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
   background: linear-gradient(
     100deg,
     rgba(148, 163, 184, 0.07) 30%,
@@ -247,6 +270,44 @@ body {
   background-size: 250% 100%;
   backdrop-filter: blur(10px);
   animation: sheen 3.6s linear infinite;
+}
+
+.slab:hover:not(:disabled) {
+  border-color: rgba(0, 212, 170, 0.6);
+  box-shadow: 0 0 32px rgba(0, 212, 170, 0.25), inset 0 0 24px rgba(0, 212, 170, 0.08);
+}
+
+.slab:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.slab:disabled {
+  cursor: progress;
+  color: var(--mist);
+}
+
+.slab-tap {
+  display: none;
+}
+
+.slab-warning {
+  margin-top: 0.5rem;
+  padding: 0 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: var(--mist);
+}
+
+@media (hover: none) {
+  .slab-click {
+    display: none;
+  }
+
+  .slab-tap {
+    display: inline;
+  }
 }
 
 @keyframes sheen {
@@ -263,7 +324,19 @@ body {
   overflow-wrap: anywhere;
 }
 
+.name .ch {
+  position: relative;
+}
+
+.name .ch-real {
+  visibility: hidden;
+}
+
 .name .ch-live {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
   color: var(--teal);
   opacity: 0.75;
 }
