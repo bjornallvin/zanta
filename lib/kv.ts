@@ -35,6 +35,13 @@ export async function createEvent(
     assignedTo: null,
   }));
 
+  // Draw everyone up front: shuffle into a circle, each gives to the next.
+  // No one can draw themselves, and the draw can't dead-end on the last reveal.
+  const circle = shuffle(participants);
+  circle.forEach((giver, i) => {
+    giver.assignedTo = circle[(i + 1) % circle.length].id;
+  });
+
   const event: SecretSantaEvent = {
     participants,
     budgetMessage,
@@ -78,7 +85,7 @@ export async function updateParticipant(
   }
 }
 
-// Assignment logic - assign on reveal
+// Assignment logic - the draw is made in createEvent; reveal just looks it up
 export async function assignSecretSanta(
   participantId: string
 ): Promise<string> {
@@ -94,41 +101,29 @@ export async function assignSecretSanta(
     throw new Error("Participant not found");
   }
 
-  // If already assigned, return existing assignment
-  if (currentParticipant.assignedTo) {
-    const assignedPerson = event.participants.find(
-      (p) => p.id === currentParticipant.assignedTo
-    );
-    return assignedPerson?.name || "";
-  }
-
-  // Get all unassigned participants (excluding current participant)
-  const unassignedParticipants = event.participants.filter(
-    (p) => p.id !== participantId && !isParticipantAssigned(p.id, event)
+  const assignedPerson = event.participants.find(
+    (p) => p.id === currentParticipant.assignedTo
   );
-
-  if (unassignedParticipants.length === 0) {
-    throw new Error("No available participants to assign");
+  if (!assignedPerson) {
+    throw new Error("No assignment found for this participant");
   }
 
-  // Randomly select one
-  const randomIndex = Math.floor(Math.random() * unassignedParticipants.length);
-  const assignedPerson = unassignedParticipants[randomIndex];
-
-  // Update current participant
-  currentParticipant.assignedTo = assignedPerson.id;
-  currentParticipant.hasRevealed = true;
-  await updateParticipant(currentParticipant);
+  if (!currentParticipant.hasRevealed) {
+    currentParticipant.hasRevealed = true;
+    await updateParticipant(currentParticipant);
+  }
 
   return assignedPerson.name;
 }
 
-// Helper to check if a participant has been assigned to someone
-function isParticipantAssigned(
-  participantId: string,
-  event: SecretSantaEvent
-): boolean {
-  return event.participants.some((p) => p.assignedTo === participantId);
+// Fisher-Yates shuffle, returns a new array
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 // Generate unique ID for participants

@@ -2,83 +2,649 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Awolve brand tokens (Aurora Ember) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --night: #0a1628;
+  --deep: #050d1a;
+  --navy: #0a2540;
+  --panel: #132337;
+  --line: #1e3a5f;
+  --teal: #00d4aa;
+  --blue: #3b82f6;
+  --violet: #8b5cf6;
+  --ember: #ea580c;
+  --ember-hot: #f97316;
+  --snow: #f8fafc;
+  --mist: #94a3b8;
+  --dim: #64748b;
+  --ridge: #040b16;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--deep);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100dvh;
+  background: var(--deep);
+  color: var(--snow);
+  font-family: var(--font-satoshi), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+::selection {
+  background: var(--teal);
+  color: var(--night);
+}
+
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 3px;
+}
+
+/* ---------- Sky ---------- */
+
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--deep) 0%, var(--night) 55%, var(--navy) 100%);
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0.8;
+}
+
+.stars i {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--snow);
+}
+
+/* WebGL aurora; black pixels vanish under screen blending */
+.aurora-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+}
+
+/* Keeps text readable where it sits over the brightest part of the aurora */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(5, 13, 26, 0.6) 0%, rgba(5, 13, 26, 0.35) 38%, transparent 62%);
+}
+
+@media (max-width: 720px) {
+  .scrim {
+    background: rgba(5, 13, 26, 0.4);
   }
 }
 
-/* Christmas animations */
-@keyframes gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
+.mountains {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  /* 25vw matches the 4:1 drawing, so peaks are never cut; narrower screens crop the sides */
+  height: max(25vw, 170px);
+}
+
+/* Ice logomark: stands behind the near ridge, its base hidden by the trees */
+.icemark {
+  position: absolute;
+  right: 10vw;
+  bottom: calc(max(25vw, 170px) * 0.19);
+  width: clamp(240px, 30vw, 1000px);
+  height: auto;
+  overflow: visible;
+}
+
+.icemark-glow {
+  opacity: 0.35;
+  transition: opacity 1.8s ease;
+}
+
+.sky.flare .icemark-glow {
+  opacity: 0.8;
+}
+
+.icemark-sweep {
+  animation: ice-sweep 9s ease-in-out infinite;
+}
+
+.icemark-glint {
+  opacity: 0;
+  transform-box: view-box;
+  animation: glint 6.5s ease-in-out infinite;
+}
+
+@keyframes ice-sweep {
+  0%, 55% { transform: translateX(0) skewX(-20deg); }
+  85%, 100% { transform: translateX(340px) skewX(-20deg); }
+}
+
+@keyframes glint {
+  0%, 70%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  78% { opacity: 1; transform: scale(1) rotate(45deg); }
+  88% { opacity: 0; transform: scale(0.3) rotate(90deg); }
+}
+
+@media (max-width: 720px) {
+  .icemark {
+    right: -4vw;
+    width: 56vw;
   }
 }
 
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
+/* ---------- Shell ---------- */
+
+.shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 24px clamp(16px, 5vw, 72px);
+}
+
+.shell-header img {
+  display: block;
+  height: 22px;
+  width: auto;
+}
+
+.shell-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding: 8vh 0 14vh;
+}
+
+.shell-footer {
+  font-size: 0.8125rem;
+  color: var(--dim);
+}
+
+.stage {
+  width: 100%;
+  max-width: 42rem;
+}
+
+.stage-wide {
+  max-width: 52rem;
+}
+
+/* ---------- Type ---------- */
+
+.display {
+  font-size: clamp(3.25rem, 12vw, 8rem);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+.title {
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.lead {
+  max-width: 34rem;
+  margin-top: 1.5rem;
+  font-size: clamp(1.125rem, 2.4vw, 1.375rem);
+  line-height: 1.5;
+  color: var(--mist);
+}
+
+.lead strong {
+  color: var(--snow);
+  font-weight: 500;
+}
+
+.fine {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--mist);
+}
+
+/* ---------- Reveal ---------- */
+
+.greeting {
+  font-size: clamp(1.25rem, 3vw, 1.625rem);
+  font-weight: 500;
+  color: rgba(248, 250, 252, 0.82);
+}
+
+.slot {
+  position: relative;
+  margin: 1.25rem 0 2.5rem;
+  min-height: clamp(3.4rem, 13vw, 8.6rem);
+}
+
+.slab {
+  height: clamp(3.2rem, 12.5vw, 8.2rem);
+  width: min(100%, 30rem);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(
+    100deg,
+    rgba(148, 163, 184, 0.07) 30%,
+    rgba(0, 212, 170, 0.16) 50%,
+    rgba(148, 163, 184, 0.07) 70%
+  );
+  background-size: 250% 100%;
+  backdrop-filter: blur(10px);
+  animation: sheen 3.6s linear infinite;
+}
+
+@keyframes sheen {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+.name {
+  position: relative;
+  font-size: clamp(3.25rem, 13vw, 8.5rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+}
+
+.name .ch-live {
+  color: var(--teal);
+  opacity: 0.75;
+}
+
+/* The one place ember is used: the glow under the name once it lands */
+.name::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -4%;
+  right: 20%;
+  bottom: -18%;
+  height: 55%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(234, 88, 12, 0.55), transparent);
+  filter: blur(18px);
+  opacity: 0;
+  transition: opacity 1.2s ease 0.1s;
+}
+
+.name.landed::after {
+  opacity: 1;
+}
+
+.underline {
+  display: block;
+  height: 4px;
+  width: 0;
+  margin-top: 1rem;
+  border-radius: 2px;
+  background: var(--ember);
+  transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s;
+}
+
+.name.landed + .underline {
+  width: min(9rem, 40%);
+}
+
+.details {
+  display: grid;
+  gap: 1.5rem 3rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.details.shown {
+  opacity: 1;
+  transform: none;
+}
+
+.fade {
+  opacity: 0;
+  transition: opacity 0.8s ease 0.4s;
+}
+
+.fade.shown {
+  opacity: 1;
+}
+
+@media (min-width: 640px) {
+  .details {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
   }
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
+.details dt {
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--dim);
+}
+
+.details dd {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-primary {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  background: var(--ember);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--ember-hot);
+}
+
+.btn-quiet {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9375rem;
+  border: 1px solid var(--line);
+  color: var(--snow);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.btn-danger {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9375rem;
+  border: 1px solid transparent;
+  color: var(--mist);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fca5a5;
+}
+
+.link {
+  color: var(--teal);
+  font-weight: 500;
+  text-underline-offset: 4px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Admin ---------- */
+
+.section {
+  margin-top: 3.5rem;
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--teal);
+  transition: width 0.8s ease;
+}
+
+.roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.5rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.roster li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0;
+  font-size: 1rem;
+}
+
+.roster li.waiting {
+  color: var(--mist);
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--dim);
+}
+
+.dot.on {
+  border-color: var(--teal);
+  background: var(--teal);
+  box-shadow: 0 0 10px rgba(0, 212, 170, 0.7);
+}
+
+.meta {
+  display: grid;
+  gap: 1rem 3rem;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+@media (min-width: 640px) {
+  .meta {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
   }
 }
 
-@keyframes shake {
-  0%, 100% {
-    transform: rotate(0deg);
+.meta dt {
+  font-size: 0.875rem;
+  color: var(--dim);
+}
+
+.meta dd {
+  margin-top: 0.25rem;
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.field {
+  display: block;
+  margin-bottom: 1.75rem;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-weight: 500;
+}
+
+.field-hint {
+  font-weight: 400;
+  color: var(--dim);
+}
+
+.input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(10, 37, 64, 0.55);
+  color: var(--snow);
+  font: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--dim);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.2);
+}
+
+textarea.input {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.6rem;
+}
+
+.person {
+  position: relative;
+}
+
+.person .input {
+  padding-right: 2.75rem;
+}
+
+.person-remove {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  color: var(--dim);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.person-remove:hover {
+  color: var(--snow);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.add-person {
+  margin-top: 0.85rem;
+}
+
+.notice {
+  margin-bottom: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border-left: 3px solid var(--ember);
+  background: rgba(234, 88, 12, 0.1);
+  border-radius: 0 10px 10px 0;
+  line-height: 1.5;
+}
+
+.notice.ok {
+  border-left-color: var(--teal);
+  background: rgba(0, 212, 170, 0.08);
+}
+
+.links {
+  border-top: 1px solid var(--line);
+}
+
+.links li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.links .who {
+  flex: 1 1 10rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+.links .url {
+  flex: 1 1 100%;
+  order: 3;
+  font-size: 0.875rem;
+  color: var(--dim);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .slab,
+  .icemark-sweep,
+  .icemark-glint {
+    animation: none;
   }
-  25% {
-    transform: rotate(-5deg);
+
+  .name::after,
+  .underline,
+  .details {
+    transition: none;
   }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 15s ease infinite;
-}
-
-.animate-twinkle {
-  animation: twinkle 2s ease-in-out infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
 }

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteEvent } from "@/lib/kv";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+
   try {
     await deleteEvent();
 

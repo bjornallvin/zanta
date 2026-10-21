@@ -1,166 +1,141 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import ChristmasLayout from "@/components/ChristmasLayout";
+import Shell from "@/components/Shell";
+import Decode from "@/components/Decode";
+
+interface Result {
+  assignedName: string;
+  budgetMessage: string;
+  eventDetails: string;
+}
+
+type View =
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "sealed"; participantName: string; busy: boolean; error?: string }
+  | { kind: "open"; participantName: string; result: Result; animate: boolean };
 
 export default function RevealPage() {
   const params = useParams();
   const participantId = params.id as string;
 
-  const [revealed, setRevealed] = useState(false);
-  const [assignedName, setAssignedName] = useState("");
-  const [budgetMessage, setBudgetMessage] = useState("");
-  const [eventDetails, setEventDetails] = useState("");
-  const [participantName, setParticipantName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [view, setView] = useState<View>({ kind: "loading" });
+  const [landed, setLanded] = useState(false);
 
-  // Check on load if already revealed
   useEffect(() => {
-    const checkIfRevealed = async () => {
+    const load = async () => {
       try {
-        const response = await fetch(`/api/reveal/${participantId}`, {
-          method: "POST",
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to load assignment");
-        }
-
+        const response = await fetch(`/api/reveal/${participantId}`);
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
 
-        // If the participant has already revealed, show the result
-        if (data.alreadyRevealed || data.assignedName) {
-          setAssignedName(data.assignedName);
-          setBudgetMessage(data.budgetMessage);
-          setEventDetails(data.eventDetails);
-          setParticipantName(data.participantName);
-          setRevealed(true);
+        if (data.hasRevealed) {
+          setView({
+            kind: "open",
+            participantName: data.participantName,
+            result: data,
+            animate: false,
+          });
+        } else {
+          setView({ kind: "sealed", participantName: data.participantName, busy: false });
         }
       } catch (err: any) {
-        setError(err.message || "Failed to load. Please try again.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+        setView({
+          kind: "error",
+          message: err.message || "Your link couldn't be loaded. Reload the page to try again.",
+        });
       }
     };
 
-    checkIfRevealed();
+    load();
   }, [participantId]);
 
   const handleReveal = async () => {
-    setIsLoading(true);
-    setError("");
+    if (view.kind !== "sealed") return;
+    const { participantName } = view;
+    setView({ kind: "sealed", participantName, busy: true });
 
     try {
-      const response = await fetch(`/api/reveal/${participantId}`, {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to reveal assignment");
-      }
-
+      const response = await fetch(`/api/reveal/${participantId}`, { method: "POST" });
       const data = await response.json();
-      setAssignedName(data.assignedName);
-      setBudgetMessage(data.budgetMessage);
-      setEventDetails(data.eventDetails);
-      setParticipantName(data.participantName);
-      setRevealed(true);
+      if (!response.ok) throw new Error(data.error);
+
+      setView({ kind: "open", participantName, result: data, animate: true });
     } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
+      setView({
+        kind: "sealed",
+        participantName,
+        busy: false,
+        error: err.message || "The reveal didn't go through. Try again.",
+      });
     }
   };
 
+  const firstName = (name: string) => name.trim().split(/\s+/)[0];
+
   return (
-    <ChristmasLayout>
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-2xl p-8 border-4 border-green-500/20">
-          {isLoading && !revealed ? (
-            <div className="text-center">
-              <div className="text-7xl mb-6 animate-bounce">🎁</div>
-              <h1 className="text-2xl font-bold mb-4 text-gray-700 dark:text-gray-300">
-                Loading your Secret Santa...
-              </h1>
-              <div className="animate-pulse text-gray-500 dark:text-gray-400">
-                ✨ Please wait ✨
-              </div>
+    <Shell flare={view.kind === "open" && landed}>
+      <div className="stage" aria-live="polite">
+        {view.kind === "loading" && <p className="greeting">Opening your link</p>}
+
+        {view.kind === "error" && (
+          <>
+            <h1 className="title">This link doesn&rsquo;t work</h1>
+            <p className="lead">{view.message}</p>
+          </>
+        )}
+
+        {view.kind === "sealed" && (
+          <>
+            <p className="greeting">Hi {firstName(view.participantName)}. You&rsquo;re buying a gift for</p>
+            <div className="slot">
+              <div className="slab" />
             </div>
-          ) : !revealed ? (
-            <div className="text-center">
-              <div className="text-7xl mb-6 animate-float">🎁</div>
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
-                🎄 Secret Santa 🎄
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
-                ✨ Ready to find out who you're buying a gift for? ✨
-              </p>
 
-            {error && (
-              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+            {view.error && <p className="notice">{view.error}</p>}
 
-            <button
-              onClick={handleReveal}
-              disabled={isLoading}
-              className="w-full py-4 bg-gradient-to-r from-red-500 to-green-500 text-white font-semibold text-lg rounded-lg hover:from-red-600 hover:to-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
-            >
-              🎅 Reveal My Secret Santa
+            <button className="btn btn-primary" onClick={handleReveal} disabled={view.busy}>
+              {view.busy ? "Revealing" : "Reveal my person"}
             </button>
-
-            <p className="mt-6 text-xs text-gray-500 dark:text-gray-400">
-              Click to reveal your assignment!
+            <p className="fine" style={{ marginTop: "1.25rem" }}>
+              Only you see this. Once revealed, it stays the same every time you open the link.
             </p>
-          </div>
-        ) : (
-          <div className="text-center">
-            <div className="text-6xl mb-6 animate-bounce">🎉</div>
-            <h1 className="text-2xl font-bold mb-2">
-              {participantName}, you're buying a gift for...
-            </h1>
+          </>
+        )}
 
-            <div className="my-8 p-6 bg-gradient-to-r from-red-100 to-green-100 dark:from-red-900 dark:to-green-900 rounded-lg">
-              <div className="text-4xl font-bold text-red-600 dark:text-red-400">
-                {assignedName}
-              </div>
+        {view.kind === "open" && (
+          <>
+            <p className="greeting">{firstName(view.participantName)}, you&rsquo;re buying a gift for</p>
+            <div className="slot">
+              <h1 className={`name${landed ? " landed" : ""}`}>
+                <Decode
+                  text={view.result.assignedName}
+                  animate={view.animate}
+                  onDone={() => setLanded(true)}
+                />
+              </h1>
+              <span className="underline" />
             </div>
 
-            <div className="space-y-3 mb-6">
-              <div className="p-4 bg-purple-50 dark:bg-purple-900 rounded-lg border-2 border-purple-200 dark:border-purple-700">
-                <div className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2">
-                  📅 Event Details
-                </div>
-                <div className="text-purple-800 dark:text-purple-200 whitespace-pre-line">
-                  {eventDetails}
-                </div>
+            <dl className={`details${landed ? " shown" : ""}`}>
+              <div>
+                <dt>Budget</dt>
+                <dd>{view.result.budgetMessage}</dd>
               </div>
-
-              <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border-2 border-blue-200 dark:border-blue-700">
-                <div className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                  💰 Budget Reminder
-                </div>
-                <div className="text-blue-800 dark:text-blue-200">
-                  {budgetMessage}
-                </div>
+              <div>
+                <dt>When and where</dt>
+                <dd>{view.result.eventDetails}</dd>
               </div>
-            </div>
+            </dl>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-              <p>🤫 Remember to keep it a secret!</p>
-              <p>🎁 Happy shopping!</p>
-            </div>
-          </div>
-          )}
-        </div>
+            <p className={`fine fade${landed ? " shown" : ""}`} style={{ marginTop: "2rem" }}>
+              Keep it to yourself until the gifts are opened.
+            </p>
+          </>
+        )}
       </div>
-    </ChristmasLayout>
+    </Shell>
   );
 }

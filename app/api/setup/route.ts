@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createEvent } from "@/lib/kv";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { participantNames, budgetMessage, eventDetails } = body;
@@ -14,13 +18,6 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "At least 2 participants are required" },
-        { status: 400 }
-      );
-    }
-
-    if (participantNames.length % 2 !== 0) {
-      return NextResponse.json(
-        { error: "An even number of participants is required" },
         { status: 400 }
       );
     }

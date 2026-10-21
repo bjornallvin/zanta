@@ -6,7 +6,7 @@ A simple Secret Santa gift exchange application built with Next.js and Vercel KV
 
 - 🎁 Admin interface to create Secret Santa events
 - 🔗 Unique secret links for each participant
-- 🎲 Dynamic assignment on first reveal (prevents self-assignment)
+- 🎲 Full draw made when the event is created (no self-assignment, never dead-ends)
 - 💰 Budget reminder displayed to each participant
 - 🎨 Beautiful, responsive UI with dark mode support
 - 🔒 Unique KV key prefixes to avoid conflicts with other projects
@@ -84,7 +84,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 ### For Admin (You)
 
 1. Go to `/setup-secret-santa`
-2. Enter participant names (must be an even number)
+2. Enter participant names (at least 2)
 3. Set a budget message
 4. Click "Generate Secret Santa Links"
 5. Copy and share each unique link with the corresponding participant
@@ -100,8 +100,8 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 - ✅ All KV keys are prefixed with `secretsanta:` to avoid conflicts with other projects
 - ✅ Participants can only reveal once (subsequent visits show the same assignment)
-- ✅ Assignments are made dynamically as people reveal, ensuring fair distribution
-- ✅ The app ensures no one gets assigned to themselves (with even number of participants)
+- ✅ Everyone is shuffled into one circle when the event is created; each person gives to the next
+- ✅ No one is ever assigned to themselves, and any number of participants (2+) works
 - ⚠️ Currently supports one active Secret Santa event at a time
 - ⚠️ Save the generated links - they cannot be retrieved later!
 

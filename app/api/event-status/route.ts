@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getEvent } from "@/lib/kv";
+import { requireAdmin } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+
   try {
     const event = await getEvent();
 
@@ -11,7 +15,11 @@ export async function GET() {
 
     return NextResponse.json({
       event: {
-        participants: event.participants,
+        // Only name and status: ids are the secret links, assignedTo is the draw
+        participants: event.participants.map((p) => ({
+          name: p.name,
+          hasRevealed: p.hasRevealed,
+        })),
         budgetMessage: event.budgetMessage,
         eventDetails: event.eventDetails,
         createdAt: event.createdAt,
