@@ -89,7 +89,8 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 4. Copy each person's link and send it to them; the links stay available in the admin view
 
 Draws are **active** (one at a time, links work) or **archived** (kept, links closed).
-Archived draws can be edited and made active again; making one active archives the current one.
+Any draw can be edited. "Reset links" gives everyone new links and matches; the old links stop working.
+Archived draws can be made active again; making one active archives the current one.
 Any draw can be deleted for good.
 
 ### For Participants
@@ -116,7 +117,7 @@ Any draw can be deleted for good.
 │   │   ├── event-status/         # active and archived draws (admin)
 │   │   ├── archive-draw/         # archive the active draw (admin)
 │   │   ├── activate-draw/        # make an archived draw active (admin)
-│   │   ├── update-draw/          # edit an archived draw (admin)
+│   │   ├── update-draw/          # edit a draw (admin)
 │   │   ├── reset-draw/           # new links and matches, old links die (admin)
 │   │   ├── delete-draw/          # delete a draw (admin)
 │   │   └── reveal/[id]/          # read or reveal one person's match
