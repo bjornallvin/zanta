@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assignSecretSanta, getEvent, getParticipant } from "@/lib/kv";
+import { DrawArchivedError, getDraw, getParticipant, revealAssignment } from "@/lib/kv";
+
+const NOT_FOUND = "This link doesn't match a Secret Santa draw. Check that you copied the whole link.";
+
+function failure(error: unknown, fallback: string) {
+  if (error instanceof DrawArchivedError) {
+    return NextResponse.json({ error: error.message }, { status: 410 });
+  }
+  console.error(fallback, error);
+  return NextResponse.json(
+    { error: error instanceof Error ? error.message : fallback },
+    { status: 500 }
+  );
+}
 
 // Read-only: says who the link belongs to, and the result only if already revealed
 export async function GET(
@@ -9,13 +22,13 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const event = await getEvent();
-    const participant = event?.participants.find((p) => p.id === id);
-    if (!event || !participant) {
-      return NextResponse.json(
-        { error: "This link doesn't match a Secret Santa draw. Check that you copied the whole link." },
-        { status: 404 }
-      );
+    const participant = await getParticipant(id);
+    const draw = participant && (await getDraw(participant.drawId));
+    if (!participant || !draw) {
+      return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
+    }
+    if (draw.status !== "active") {
+      throw new DrawArchivedError();
     }
 
     if (!participant.hasRevealed) {
@@ -25,20 +38,16 @@ export async function GET(
       });
     }
 
-    const assignedName = await assignSecretSanta(id);
+    const { assignedName } = await revealAssignment(id);
     return NextResponse.json({
       participantName: participant.name,
       hasRevealed: true,
       assignedName,
-      budgetMessage: event.budgetMessage,
-      eventDetails: event.eventDetails,
+      budgetMessage: draw.budgetMessage,
+      eventDetails: draw.eventDetails,
     });
-  } catch (error: any) {
-    console.error("Error loading participant:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to load your link" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return failure(error, "Failed to load your link");
   }
 }
 
@@ -49,46 +58,20 @@ export async function POST(
   try {
     const { id } = await params;
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Participant ID is required" },
-        { status: 400 }
-      );
+    if (!(await getParticipant(id))) {
+      return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
     }
 
-    // Check if participant exists
-    const participant = await getParticipant(id);
-    if (!participant) {
-      return NextResponse.json(
-        { error: "Invalid link. Please check your Secret Santa link." },
-        { status: 404 }
-      );
-    }
-
-    // Get event for budget message
-    const event = await getEvent();
-    if (!event) {
-      return NextResponse.json(
-        { error: "Event not found" },
-        { status: 404 }
-      );
-    }
-
-    // Assign Secret Santa (or get existing assignment)
-    const assignedName = await assignSecretSanta(id);
+    const { participant, draw, assignedName } = await revealAssignment(id);
 
     return NextResponse.json({
       success: true,
       assignedName,
-      budgetMessage: event.budgetMessage,
-      eventDetails: event.eventDetails,
+      budgetMessage: draw.budgetMessage,
+      eventDetails: draw.eventDetails,
       participantName: participant.name,
     });
-  } catch (error: any) {
-    console.error("Error revealing assignment:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to reveal assignment" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return failure(error, "Failed to reveal assignment");
   }
 }

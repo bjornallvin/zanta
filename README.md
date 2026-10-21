@@ -83,27 +83,28 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 ### For Admin (You)
 
-1. Go to `/setup-secret-santa`
-2. Enter participant names (at least 2)
-3. Set a budget message
-4. Click "Generate Secret Santa Links"
-5. Copy and share each unique link with the corresponding participant
+1. Go to `/setup-secret-santa` and enter the admin password (`ADMIN_PASSWORD`)
+2. Enter participant names (at least 2), a budget and when and where
+3. Click "Create the draw"
+4. Copy each person's link and send it to them; the links stay available in the admin view
+
+Draws are **active** (one at a time, links work) or **archived** (kept, links closed).
+Archived draws can be edited and made active again; making one active archives the current one.
+Any draw can be deleted for good.
 
 ### For Participants
 
-1. Click on their unique secret link
-2. Click "Reveal My Secret Santa"
-3. See who they're buying a gift for
-4. View the budget reminder
+1. Open their own link
+2. Click the box to reveal who they're buying a gift for
+3. See the budget and when and where
 
 ## Important Notes
 
-- ✅ All KV keys are prefixed with `secretsanta:` to avoid conflicts with other projects
-- ✅ Participants can only reveal once (subsequent visits show the same assignment)
-- ✅ Everyone is shuffled into one circle when the event is created; each person gives to the next
-- ✅ No one is ever assigned to themselves, and any number of participants (2+) works
-- ⚠️ Currently supports one active Secret Santa event at a time
-- ⚠️ Save the generated links - they cannot be retrieved later!
+- All KV keys are prefixed with `secretsanta:` to avoid conflicts with other projects
+- Everyone is shuffled into one circle when the draw is created; each person gives to the next
+- No one is ever assigned to themselves, and any number of participants (2+) works
+- Editing the people of an archived draw makes a new circle: same links, new matches
+- Admin routes require the `x-admin-password` header to match `ADMIN_PASSWORD`
 
 ## Project Structure
 
@@ -111,10 +112,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 .
 ├── app/
 │   ├── api/
-│   │   ├── setup/
-│   │   │   └── route.ts          # API to create events
-│   │   └── reveal/[id]/
-│   │       └── route.ts          # API to reveal assignments
+│   │   ├── setup/                # create a draw (admin)
+│   │   ├── event-status/         # active and archived draws (admin)
+│   │   ├── archive-draw/         # archive the active draw (admin)
+│   │   ├── activate-draw/        # make an archived draw active (admin)
+│   │   ├── update-draw/          # edit an archived draw (admin)
+│   │   ├── delete-draw/          # delete a draw (admin)
+│   │   └── reveal/[id]/          # read or reveal one person's match
 │   ├── setup-secret-santa/
 │   │   └── page.tsx              # Admin interface
 │   ├── reveal/[id]/
@@ -123,7 +127,8 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 │   ├── layout.tsx
 │   └── page.tsx                  # Home page
 ├── lib/
-│   └── kv.ts                     # Vercel KV helper functions
+│   ├── auth.ts                   # admin password check
+│   └── kv.ts                     # draws, participants, draw logic
 ├── next.config.ts
 ├── tailwind.config.ts
 ├── tsconfig.json
@@ -134,34 +139,35 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 All keys use the prefix `secretsanta:` to avoid conflicts.
 
-### Event Data
-- **Key:** `secretsanta:event`
-- **Value:**
-  ```typescript
-  {
-    participants: Participant[],
-    budgetMessage: string,
-    createdAt: number
-  }
-  ```
+| Key | Value |
+|-----|-------|
+| `secretsanta:draws` | list of draw ids, newest first |
+| `secretsanta:active-draw` | id of the active draw; absent when none |
+| `secretsanta:draw:{id}` | `Draw` |
+| `secretsanta:participant:{id}` | `Participant`; the id is the secret link |
 
-### Participant Data
-- **Key:** `secretsanta:participant:{id}`
-- **Value:**
-  ```typescript
-  {
-    id: string,
-    name: string,
-    hasRevealed: boolean,
-    assignedTo: string | null
-  }
-  ```
+```typescript
+interface Draw {
+  id: string;
+  status: "active" | "archived";
+  budgetMessage: string;
+  eventDetails: string;
+  createdAt: number;
+  archivedAt: number | null;
+  participantIds: string[];
+}
 
-## Resetting the Event
+interface Participant {
+  id: string;
+  drawId: string;
+  name: string;
+  assignedTo: string; // participant id they give to
+  hasRevealed: boolean;
+}
+```
 
-If you need to create a new event, the app currently overwrites the existing event. For production use, you might want to add a way to delete old events or support multiple events.
-
-You can manually delete KV data through the Vercel dashboard if needed.
+Creating a draw claims `active-draw` with `SET NX`, so only one draw can be active.
+A reveal writes only that participant's key, so concurrent reveals don't overwrite each other.
 
 ## Support
 

@@ -1,34 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getEvent } from "@/lib/kv";
+import { getParticipants, listDraws } from "@/lib/kv";
 import { requireAdmin } from "@/lib/auth";
 
+// Admin overview: the active draw and the history.
+// Never assignedTo (the draw itself). Participant ids are the secret links: the admin
+// shares them from here and needs them to edit archived draws.
 export async function GET(request: NextRequest) {
   const denied = requireAdmin(request);
   if (denied) return denied;
 
   try {
-    const event = await getEvent();
+    const draws = await listDraws();
 
-    if (!event) {
-      return NextResponse.json({ event: null });
-    }
+    const summaries = await Promise.all(
+      draws.map(async (draw) => {
+        const participants = await getParticipants(draw);
+        return {
+          id: draw.id,
+          status: draw.status,
+          budgetMessage: draw.budgetMessage,
+          eventDetails: draw.eventDetails,
+          createdAt: draw.createdAt,
+          archivedAt: draw.archivedAt,
+          participants: participants.map((p) => ({
+            id: p.id,
+            name: p.name,
+            hasRevealed: p.hasRevealed,
+          })),
+        };
+      })
+    );
 
     return NextResponse.json({
-      event: {
-        // Only name and status: ids are the secret links, assignedTo is the draw
-        participants: event.participants.map((p) => ({
-          name: p.name,
-          hasRevealed: p.hasRevealed,
-        })),
-        budgetMessage: event.budgetMessage,
-        eventDetails: event.eventDetails,
-        createdAt: event.createdAt,
-      },
+      active: summaries.find((d) => d.status === "active") ?? null,
+      archived: summaries.filter((d) => d.status === "archived"),
     });
   } catch (error) {
-    console.error("Error fetching event status:", error);
+    console.error("Error fetching draw status:", error);
     return NextResponse.json(
-      { error: "Failed to fetch event status" },
+      { error: "Failed to fetch draw status" },
       { status: 500 }
     );
   }

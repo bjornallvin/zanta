@@ -13,7 +13,7 @@ interface Result {
 
 type View =
   | { kind: "loading" }
-  | { kind: "error"; message: string }
+  | { kind: "error"; title: string; message: string }
   | { kind: "sealed"; participantName: string; busy: boolean; error?: string }
   | { kind: "open"; participantName: string; result: Result; animate: boolean };
 
@@ -24,11 +24,18 @@ export default function RevealPage() {
   const [view, setView] = useState<View>({ kind: "loading" });
   const [landed, setLanded] = useState(false);
 
+  const closed: View = {
+    kind: "error",
+    title: "This draw is closed",
+    message: "This link belongs to a Secret Santa draw that has been archived.",
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
         const response = await fetch(`/api/reveal/${participantId}`);
         const data = await response.json();
+        if (response.status === 410) return setView(closed);
         if (!response.ok) throw new Error(data.error);
 
         if (data.hasRevealed) {
@@ -44,12 +51,14 @@ export default function RevealPage() {
       } catch (err: any) {
         setView({
           kind: "error",
+          title: "This link doesn’t work",
           message: err.message || "Your link couldn't be loaded. Reload the page to try again.",
         });
       }
     };
 
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [participantId]);
 
   const handleReveal = async () => {
@@ -60,6 +69,7 @@ export default function RevealPage() {
     try {
       const response = await fetch(`/api/reveal/${participantId}`, { method: "POST" });
       const data = await response.json();
+      if (response.status === 410) return setView(closed);
       if (!response.ok) throw new Error(data.error);
 
       setView({ kind: "open", participantName, result: data, animate: true });
@@ -82,7 +92,7 @@ export default function RevealPage() {
 
         {view.kind === "error" && (
           <>
-            <h1 className="title">This link doesn&rsquo;t work</h1>
+            <h1 className="title">{view.title}</h1>
             <p className="lead">{view.message}</p>
           </>
         )}

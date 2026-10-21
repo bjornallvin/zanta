@@ -685,9 +685,39 @@ textarea.input {
 }
 
 .links .who {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   flex: 1 1 10rem;
   font-weight: 700;
   font-size: 1.0625rem;
+}
+
+.links .who.waiting {
+  color: var(--mist);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.edit-panel {
+  flex: 1 1 100%;
+  order: 4;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--line);
+}
+
+.links-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin: 1.75rem 0 0.75rem;
 }
 
 .links .url {
