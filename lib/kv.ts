@@ -162,12 +162,11 @@ export interface DrawEdit {
   people: { id?: string; name: string }[]; // id for existing people, none for new ones
 }
 
-// Edits an archived draw. Renames keep everything; adding or removing people
+// Edits a draw, active or archived. Renames keep everything; adding or removing people
 // makes a new draw for everyone (same links, new matches, nobody has opened yet).
 export async function updateDraw(id: string, edit: DrawEdit): Promise<{ draw: Draw; redrawn: boolean }> {
   const draw = await getDraw(id);
   if (!draw) throw new DrawNotFoundError();
-  if (draw.status !== "archived") throw new DrawNotArchivedError();
 
   const existing = new Map((await getParticipants(draw)).map((p) => [p.id, p]));
   const people = edit.people.map((p) => ({
@@ -217,12 +216,6 @@ export async function updateDraw(id: string, edit: DrawEdit): Promise<{ draw: Dr
 export class DrawNotFoundError extends Error {
   constructor() {
     super("Draw not found");
-  }
-}
-
-export class DrawNotArchivedError extends Error {
-  constructor() {
-    super("Only archived draws can be edited. Archive this draw first.");
   }
 }
 

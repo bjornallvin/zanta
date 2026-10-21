@@ -1,5 +1,6 @@
 import Aurora from "./Aurora";
 import IceMark from "./IceMark";
+import Snow from "./Snow";
 
 // Seeded so server and client render the same sky
 function mulberry32(seed: number) {
@@ -50,10 +51,30 @@ function heightAt(pts: readonly (readonly [number, number])[], x: number) {
 const FAR = ridge(56, 215, 95, 0.75);
 const NEAR = ridge(64, 300, 34, 0.5);
 
+// A small cabin on the near ridge; trees keep clear of it
+const CABIN_X = 560;
+const CABIN_Y = heightAt(NEAR, CABIN_X) + 3;
+
 const TREES = Array.from({ length: 70 }, () => {
   const x = rand() * W;
   const h = 16 + rand() * 26;
   return { x, y: heightAt(NEAR, x) + 4, h };
+}).filter((t) => Math.abs(t.x - CABIN_X) > 34);
+
+// String lights zigzag down the larger trees
+const LIGHT_COLORS = ["#ffd58a", "#f97316", "#fff1d6"];
+const LIGHTS = TREES.filter((t) => t.h > 30).flatMap((t) => {
+  const count = 4;
+  return Array.from({ length: count }, (_, k) => {
+    const f = 0.3 + (0.6 * k) / (count - 1); // share of the way down the tree
+    const half = t.h * 0.42 * f * 0.75;
+    return {
+      x: t.x + (k % 2 ? half : -half),
+      y: t.y - t.h * (1 - f),
+      color: LIGHT_COLORS[Math.floor(rand() * LIGHT_COLORS.length)],
+      delay: `${(rand() * 3).toFixed(2)}s`,
+    };
+  });
 });
 
 function pine(x: number, y: number, h: number) {
@@ -107,9 +128,35 @@ export default function Sky({ flare = false }: { flare?: boolean }) {
       </svg>
       <IceMark />
       <svg className="mountains" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <radialGradient id="window-glow">
+            <stop offset="0" stopColor="#ffc56b" stopOpacity="0.55" />
+            <stop offset="1" stopColor="#ffc56b" stopOpacity="0" />
+          </radialGradient>
+        </defs>
         <path d={toPath(NEAR)} fill="#030a14" />
         <path d={TREE_PATH} fill="#030a14" />
+
+        {/* Cabin with a lit window and snow on the roof */}
+        <g transform={`translate(${CABIN_X} ${CABIN_Y})`}>
+          <circle cx="-4" cy="-10" r="26" fill="url(#window-glow)" />
+          <rect x="6" y="-36" width="5" height="10" fill="#1a0b0e" />
+          <path d="M-20 0 V-20 L0 -34 L20 -20 V0 Z" fill="#2a0e12" />
+          <path d="M-23 -19 L0 -36 L23 -19" fill="none" stroke="#e6f4ff" strokeWidth="2.6" strokeLinecap="round" />
+          <rect className="cabin-window" x="-9" y="-15" width="9" height="8" rx="1" fill="#ffcf7a" />
+          <rect x="6" y="-13" width="7" height="13" fill="#14070a" />
+        </g>
+
+        <g>
+          {LIGHTS.map((l, i) => (
+            <g key={i} className="tree-light" style={{ animationDelay: l.delay }}>
+              <circle cx={l.x} cy={l.y} r="3.2" fill={l.color} opacity="0.25" />
+              <circle cx={l.x} cy={l.y} r="1.2" fill={l.color} />
+            </g>
+          ))}
+        </g>
       </svg>
+      <Snow />
     </div>
   );
 }

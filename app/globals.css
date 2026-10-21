@@ -128,6 +128,33 @@ body {
   animation: glint 6.5s ease-in-out infinite;
 }
 
+.snow-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tree-light {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.tree-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: star-pulse 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes star-pulse {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
 @keyframes ice-sweep {
   0%, 55% { transform: translateX(0) skewX(-20deg); }
   85%, 100% { transform: translateX(340px) skewX(-20deg); }
@@ -697,18 +724,91 @@ textarea.input {
   color: var(--mist);
 }
 
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.btn-small {
+  padding: 0.6rem 1.3rem;
+  font-size: 1rem;
 }
 
-.edit-panel {
-  flex: 1 1 100%;
-  order: 4;
-  margin-top: 1rem;
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.draw-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.draw-actions {
+  margin-top: 2.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed var(--line);
+  border-top: 1px solid var(--line);
+}
+
+.pill {
+  flex: none;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--mist);
+}
+
+.pill-active {
+  border-color: rgba(0, 212, 170, 0.5);
+  background: rgba(0, 212, 170, 0.12);
+  color: var(--teal);
+}
+
+.draw-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.draw-row {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: left;
+  color: var(--snow);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.draw-row:hover {
+  border-color: rgba(0, 212, 170, 0.5);
+  background: rgba(0, 212, 170, 0.04);
+}
+
+.draw-row.is-active {
+  border-color: rgba(0, 212, 170, 0.35);
+}
+
+.draw-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.draw-row-date {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.draw-row-people {
+  color: rgba(248, 250, 252, 0.85);
+  overflow-wrap: anywhere;
+}
+
+.draw-row-meta {
+  font-size: 0.875rem;
+  color: var(--dim);
 }
 
 .links-head {
@@ -741,7 +841,9 @@ textarea.input {
 @media (prefers-reduced-motion: reduce) {
   .slab,
   .icemark-sweep,
-  .icemark-glint {
+  .icemark-glint,
+  .tree-light,
+  .tree-star {
     animation: none;
   }
 

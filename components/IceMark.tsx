@@ -20,9 +20,19 @@ const ICICLES = [58, 71, 83, 96, 108, 121, 133, 146].map((x, i) => {
   return `M${x - 1.6} ${y} L${x + 1.6} ${y} L${x} ${y + len} Z`;
 });
 
+// Five-point star on the apex, so the mark doubles as a Christmas tree
+function star(cx: number, cy: number, outer: number, inner: number) {
+  return (
+    Array.from({ length: 10 }, (_, i) => {
+      const r = i % 2 ? inner : outer;
+      const a = (Math.PI / 5) * i - Math.PI / 2;
+      return `${i ? "L" : "M"}${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
+    }).join(" ") + " Z"
+  );
+}
+
 // Four-point glints placed on edges
 const GLINTS = [
-  { x: 114.5, y: 2, d: "0s" },
   { x: 96, y: 61.5, d: "2.3s" },
   { x: 178, y: 170, d: "4.1s" },
 ];
@@ -61,6 +71,11 @@ export default function IceMark() {
           <stop offset="0.25" stopColor="#7fa6c9" />
           <stop offset="0.75" stopColor="#0b1d33" />
         </linearGradient>
+
+        <radialGradient id="star-halo">
+          <stop offset="0" stopColor="#ffd58a" stopOpacity="0.6" />
+          <stop offset="1" stopColor="#ffd58a" stopOpacity="0" />
+        </radialGradient>
 
         <clipPath id="ice-clip">
           <path d={MARK} />
@@ -123,6 +138,11 @@ export default function IceMark() {
         d="M-28 220 Q-8 196 24 193 Q58 186 92 192 Q130 182 168 191 Q206 184 236 195 Q252 202 262 220 Z"
         fill="url(#drift)"
       />
+
+      <g className="tree-star">
+        <circle cx="114.5" cy="-9" r="16" fill="url(#star-halo)" />
+        <path d={star(114.5, -9, 10, 4.2)} fill="#ffd58a" stroke="#fff4d6" strokeWidth="0.6" />
+      </g>
 
       <g fill="#ffffff">
         {GLINTS.map((g, i) => (

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DrawNotArchivedError, DrawNotFoundError, updateDraw } from "@/lib/kv";
+import { DrawNotFoundError, updateDraw } from "@/lib/kv";
 import { requireAdmin } from "@/lib/auth";
 
-// Edits an archived draw: budget, details and people.
+// Edits a draw, active or archived: budget, details and people.
 export async function POST(request: NextRequest) {
   const denied = requireAdmin(request);
   if (denied) return denied;
@@ -48,9 +48,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof DrawNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-    if (error instanceof DrawNotArchivedError) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
     }
     console.error("Error updating draw:", error);
     return NextResponse.json({ error: "Failed to update draw" }, { status: 500 });
