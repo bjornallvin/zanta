@@ -4,17 +4,27 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Shell from "@/components/Shell";
 import Decode from "@/components/Decode";
+import Countdown from "@/components/Countdown";
 
 interface Result {
   assignedName: string;
   budgetMessage: string;
   eventDetails: string;
+  eventDate: string | null;
+  eventTime: string | null;
 }
 
 type View =
   | { kind: "loading" }
   | { kind: "error"; title: string; message: string }
-  | { kind: "sealed"; participantName: string; busy: boolean; error?: string }
+  | {
+      kind: "sealed";
+      participantName: string;
+      eventDate: string | null;
+      eventTime: string | null;
+      busy: boolean;
+      error?: string;
+    }
   | { kind: "open"; participantName: string; result: Result; animate: boolean };
 
 export default function RevealPage() {
@@ -46,7 +56,13 @@ export default function RevealPage() {
             animate: false,
           });
         } else {
-          setView({ kind: "sealed", participantName: data.participantName, busy: false });
+          setView({
+            kind: "sealed",
+            participantName: data.participantName,
+            eventDate: data.eventDate ?? null,
+            eventTime: data.eventTime ?? null,
+            busy: false,
+          });
         }
       } catch (err: any) {
         setView({
@@ -63,8 +79,8 @@ export default function RevealPage() {
 
   const handleReveal = async () => {
     if (view.kind !== "sealed") return;
-    const { participantName } = view;
-    setView({ kind: "sealed", participantName, busy: true });
+    const { participantName, eventDate, eventTime } = view;
+    setView({ kind: "sealed", participantName, eventDate, eventTime, busy: true });
 
     try {
       const response = await fetch(`/api/reveal/${participantId}`, { method: "POST" });
@@ -77,6 +93,8 @@ export default function RevealPage() {
       setView({
         kind: "sealed",
         participantName,
+        eventDate,
+        eventTime,
         busy: false,
         error: err.message || "Det gick inte att visa. Försök igen.",
       });
@@ -85,8 +103,14 @@ export default function RevealPage() {
 
   const firstName = (name: string) => name.trim().split(/\s+/)[0];
 
+  const when =
+    view.kind === "sealed" ? view : view.kind === "open" ? view.result : null;
+  const countdown = when?.eventDate ? (
+    <Countdown eventDate={when.eventDate} eventTime={when.eventTime} />
+  ) : null;
+
   return (
-    <Shell flare={view.kind === "open" && landed}>
+    <Shell flare={view.kind === "open" && landed} headerAside={countdown}>
       <div className="stage" aria-live="polite">
         {view.kind === "loading" && <p className="greeting">Öppnar din länk</p>}
 
@@ -147,7 +171,7 @@ export default function RevealPage() {
               </div>
             </dl>
 
-            <p className={`fine fade${landed ? " shown" : ""}`} style={{ marginTop: "2rem" }}>
+            <p className={`fine fade${landed ? " shown" : ""}`} style={{ marginTop: "1.25rem" }}>
               Håll det hemligt tills julklapparna öppnas.
             </p>
           </>

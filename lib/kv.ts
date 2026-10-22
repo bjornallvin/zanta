@@ -11,6 +11,10 @@ export type DrawStatus = "active" | "archived";
 export interface Draw {
   id: string;
   status: DrawStatus;
+  // When gifts are exchanged, Stockholm time; the date names the draw.
+  // Null on draws made before these fields existed.
+  eventDate: string | null; // YYYY-MM-DD
+  eventTime: string | null; // HH:MM
   budgetMessage: string;
   eventDetails: string;
   createdAt: number;
@@ -45,7 +49,9 @@ export class ActiveDrawExistsError extends Error {
 export async function createDraw(
   participantNames: string[],
   budgetMessage: string,
-  eventDetails: string
+  eventDetails: string,
+  eventDate: string,
+  eventTime: string
 ): Promise<{ draw: Draw; participants: Participant[] }> {
   const drawId = generateUniqueId();
 
@@ -73,6 +79,8 @@ export async function createDraw(
   const draw: Draw = {
     id: drawId,
     status: "active",
+    eventDate,
+    eventTime,
     budgetMessage,
     eventDetails,
     createdAt: Date.now(),
@@ -157,6 +165,8 @@ export async function activateDraw(id: string): Promise<{ draw: Draw; archived: 
 }
 
 export interface DrawEdit {
+  eventDate: string;
+  eventTime: string;
   budgetMessage: string;
   eventDetails: string;
   people: { id?: string; name: string }[]; // id for existing people, none for new ones
@@ -197,6 +207,8 @@ export async function updateDraw(id: string, edit: DrawEdit): Promise<{ draw: Dr
     ...draw,
     budgetMessage: edit.budgetMessage,
     eventDetails: edit.eventDetails,
+    eventDate: edit.eventDate,
+    eventTime: edit.eventTime,
     participantIds: participants.map((p) => p.id),
   };
 

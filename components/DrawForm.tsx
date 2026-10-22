@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 export interface DrawFormValues {
+  eventDate: string; // YYYY-MM-DD, empty until chosen
+  eventTime: string; // HH:MM
   people: { id?: string; name: string }[];
   budgetMessage: string;
   eventDetails: string;
@@ -19,6 +21,8 @@ interface DrawFormProps {
 
 // People, budget and details; used to create a draw and to edit an archived one
 export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubmit, onCancel }: DrawFormProps) {
+  const [eventDate, setEventDate] = useState(initial.eventDate);
+  const [eventTime, setEventTime] = useState(initial.eventTime);
   const [people, setPeople] = useState(initial.people);
   const [budgetMessage, setBudgetMessage] = useState(initial.budgetMessage);
   const [eventDetails, setEventDetails] = useState(initial.eventDetails);
@@ -37,6 +41,8 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
     setError("");
 
     const filled = people.map((p) => ({ ...p, name: p.name.trim() })).filter((p) => p.name);
+    if (!eventDate) return setError("Välj datum för julklappsutdelningen.");
+    if (!eventTime) return setError("Välj tid för julklappsutdelningen.");
     if (filled.length < 2) return setError("Lägg till minst 2 personer.");
     if (new Set(filled.map((p) => p.name.toLowerCase())).size !== filled.length) {
       return setError("Två personer har samma namn. Lägg till efternamn eller initial så att alla kan skilja dem åt.");
@@ -46,7 +52,13 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
 
     setBusy(true);
     try {
-      await onSubmit({ people: filled, budgetMessage: budgetMessage.trim(), eventDetails: eventDetails.trim() });
+      await onSubmit({
+        eventDate,
+        eventTime,
+        people: filled,
+        budgetMessage: budgetMessage.trim(),
+        eventDetails: eventDetails.trim(),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Det gick inte. Försök igen.");
     } finally {
@@ -56,6 +68,19 @@ export default function DrawForm({ initial, submitLabel, busyLabel, note, onSubm
 
   return (
     <form onSubmit={handleSubmit}>
+      <div className="when">
+        <label className="field">
+          <span className="field-label">
+            Datum <span className="field-hint">(för utdelningen)</span>
+          </span>
+          <input type="date" className="input" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+        </label>
+        <label className="field">
+          <span className="field-label">Tid</span>
+          <input type="time" className="input" value={eventTime} onChange={(e) => setEventTime(e.target.value)} />
+        </label>
+      </div>
+
       <fieldset className="field">
         <legend className="field-label">
           Personer <span className="field-hint">({people.filter((p) => p.name.trim()).length} tillagda)</span>

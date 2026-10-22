@@ -4,9 +4,10 @@ import Sky from "./Sky";
 interface ShellProps {
   children: React.ReactNode;
   flare?: boolean;
+  headerAside?: React.ReactNode; // shown opposite the logo, e.g. the countdown
 }
 
-export default function Shell({ children, flare = false }: ShellProps) {
+export default function Shell({ children, flare = false, headerAside }: ShellProps) {
   return (
     <>
       <Sky flare={flare} />
@@ -15,6 +16,7 @@ export default function Shell({ children, flare = false }: ShellProps) {
           <Link href="/" aria-label="Awolve Secret Santa, startsida">
             <img src="/awolve-logo.svg" alt="awolve" />
           </Link>
+          {headerAside}
         </header>
         <main className="shell-main">{children}</main>
         <footer className="shell-footer">

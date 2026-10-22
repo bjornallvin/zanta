@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Shell from "@/components/Shell";
 import DrawForm, { DrawFormValues } from "@/components/DrawForm";
+import { eventStartMs, formatEventMoment } from "@/lib/dates";
 
 interface Participant {
   id: string; // the secret link
@@ -16,6 +17,8 @@ interface DrawSummary {
   participants: Participant[];
   budgetMessage: string;
   eventDetails: string;
+  eventDate: string | null;
+  eventTime: string | null;
   createdAt: number;
   archivedAt: number | null;
 }
@@ -24,6 +27,8 @@ interface DrawSummary {
 type View = { kind: "list" } | { kind: "draw"; id: string } | { kind: "new" };
 
 const NEW_DRAW: DrawFormValues = {
+  eventDate: "",
+  eventTime: "18:00",
   people: Array.from({ length: 6 }, () => ({ name: "" })),
   budgetMessage: "Runt 200 kr",
   eventDetails: "",
@@ -32,6 +37,13 @@ const PASSWORD_KEY = "zanta-admin-password";
 
 const formatDate = (ms: number) =>
   new Date(ms).toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" });
+
+// The event date names a draw; older draws without one fall back to when they were created
+const drawName = (draw: DrawSummary) =>
+  draw.eventDate ? formatEventMoment(draw.eventDate, draw.eventTime) : `Skapad ${formatDate(draw.createdAt)}`;
+
+const sortKey = (draw: DrawSummary) =>
+  draw.eventDate ? eventStartMs(draw.eventDate, draw.eventTime) : draw.createdAt;
 
 const openedCount = (draw: DrawSummary) => draw.participants.filter((p) => p.hasRevealed).length;
 
@@ -101,7 +113,8 @@ export default function SetupPage() {
       const response = await adminFetch("/api/event-status", pw);
       if (response.ok) {
         const data = await response.json();
-        setDraws([...(data.active ? [data.active] : []), ...data.archived]);
+        const all: DrawSummary[] = [...(data.active ? [data.active] : []), ...data.archived];
+        setDraws(all.sort((a, b) => sortKey(b) - sortKey(a)));
         setPassword(pw);
         setUnlocked(true);
         storePassword(pw);
@@ -141,6 +154,8 @@ export default function SetupPage() {
 
   const handleCreate = async (values: DrawFormValues) => {
     const { drawId } = await post("/api/setup", {
+      eventDate: values.eventDate,
+      eventTime: values.eventTime,
       participantNames: values.people.map((p) => p.name),
       budgetMessage: values.budgetMessage,
       eventDetails: values.eventDetails,
@@ -307,7 +322,7 @@ export default function SetupPage() {
         <div className="stage stage-wide">
           {back}
           <div className="draw-head">
-            <h1 className="title">Dragning {formatDate(selected.createdAt)}</h1>
+            <h1 className="title">{drawName(selected)}</h1>
             <span className={`pill${active ? " pill-active" : ""}`}>{active ? "Aktiv" : "Arkiverad"}</span>
           </div>
           <p className="fine" style={{ marginTop: "0.75rem" }}>
@@ -373,9 +388,11 @@ export default function SetupPage() {
               Personer och detaljer
             </h2>
             <DrawForm
-              key={`${selected.id}-${selected.budgetMessage}-${selected.eventDetails}-${selected.participants.map((p) => p.id + p.name).join()}`}
+              key={`${selected.id}-${selected.eventDate}-${selected.eventTime}-${selected.budgetMessage}-${selected.eventDetails}-${selected.participants.map((p) => p.id + p.name).join()}`}
               initial={{
                 people: selected.participants.map((p) => ({ id: p.id, name: p.name })),
+                eventDate: selected.eventDate ?? "",
+                eventTime: selected.eventTime ?? "",
                 budgetMessage: selected.budgetMessage,
                 eventDetails: selected.eventDetails,
               }}
@@ -444,7 +461,7 @@ export default function SetupPage() {
                 <li key={draw.id}>
                   <button className={`draw-row${active ? " is-active" : ""}`} onClick={() => go({ kind: "draw", id: draw.id })}>
                     <span className="draw-row-top">
-                      <span className="draw-row-date">{formatDate(draw.createdAt)}</span>
+                      <span className="draw-row-date">{drawName(draw)}</span>
                       <span className={`pill${active ? " pill-active" : ""}`}>{active ? "Aktiv" : "Arkiverad"}</span>
                     </span>
                     <span className="draw-row-people">{draw.participants.map((p) => p.name).join(", ")}</span>

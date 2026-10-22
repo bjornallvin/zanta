@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ActiveDrawExistsError, createDraw } from "@/lib/kv";
+import { isEventDate, isEventTime } from "@/lib/dates";
 import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -8,7 +9,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { participantNames, budgetMessage, eventDetails } = body;
+    const { participantNames, budgetMessage, eventDetails, eventDate, eventTime } = body;
+
+    if (!isEventDate(eventDate)) {
+      return NextResponse.json({ error: "Datum saknas" }, { status: 400 });
+    }
+    if (!isEventTime(eventTime)) {
+      return NextResponse.json({ error: "Tid saknas" }, { status: 400 });
+    }
 
     // Validate
     if (
@@ -36,7 +44,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { draw, participants } = await createDraw(participantNames, budgetMessage, eventDetails);
+    const { draw, participants } = await createDraw(
+      participantNames,
+      budgetMessage,
+      eventDetails,
+      eventDate,
+      eventTime
+    );
 
     return NextResponse.json({
       success: true,

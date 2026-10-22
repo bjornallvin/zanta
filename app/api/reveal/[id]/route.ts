@@ -31,10 +31,14 @@ export async function GET(
       throw new DrawArchivedError();
     }
 
+    // The date and time are not secret: the countdown shows them before the reveal
+    const when = { eventDate: draw.eventDate ?? null, eventTime: draw.eventTime ?? null };
+
     if (!participant.hasRevealed) {
       return NextResponse.json({
         participantName: participant.name,
         hasRevealed: false,
+        ...when,
       });
     }
 
@@ -45,6 +49,7 @@ export async function GET(
       assignedName,
       budgetMessage: draw.budgetMessage,
       eventDetails: draw.eventDetails,
+      ...when,
     });
   } catch (error) {
     return failure(error, "Det gick inte att öppna din länk");
@@ -69,6 +74,8 @@ export async function POST(
       assignedName,
       budgetMessage: draw.budgetMessage,
       eventDetails: draw.eventDetails,
+      eventDate: draw.eventDate ?? null,
+      eventTime: draw.eventTime ?? null,
       participantName: participant.name,
     });
   } catch (error) {

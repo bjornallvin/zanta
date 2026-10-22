@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DrawNotFoundError, updateDraw } from "@/lib/kv";
+import { isEventDate, isEventTime } from "@/lib/dates";
 import { requireAdmin } from "@/lib/auth";
 
 // Edits a draw, active or archived: budget, details and people.
@@ -8,7 +9,14 @@ export async function POST(request: NextRequest) {
   if (denied) return denied;
 
   try {
-    const { drawId, budgetMessage, eventDetails, people } = await request.json();
+    const { drawId, budgetMessage, eventDetails, eventDate, eventTime, people } = await request.json();
+
+    if (!isEventDate(eventDate)) {
+      return NextResponse.json({ error: "Datum saknas" }, { status: 400 });
+    }
+    if (!isEventTime(eventTime)) {
+      return NextResponse.json({ error: "Tid saknas" }, { status: 400 });
+    }
 
     if (!drawId || typeof drawId !== "string") {
       return NextResponse.json({ error: "drawId is required" }, { status: 400 });
@@ -41,6 +49,8 @@ export async function POST(request: NextRequest) {
     const { redrawn } = await updateDraw(drawId, {
       budgetMessage: budgetMessage.trim(),
       eventDetails: eventDetails.trim(),
+      eventDate,
+      eventTime,
       people: cleaned,
     });
 

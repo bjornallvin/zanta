@@ -152,6 +152,8 @@ All keys use the prefix `secretsanta:` to avoid conflicts.
 interface Draw {
   id: string;
   status: "active" | "archived";
+  eventDate: string | null; // YYYY-MM-DD, names the draw; Stockholm time
+  eventTime: string | null; // HH:MM, the countdown target
   budgetMessage: string;
   eventDetails: string;
   createdAt: number;

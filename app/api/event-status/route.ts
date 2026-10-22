@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
           status: draw.status,
           budgetMessage: draw.budgetMessage,
           eventDetails: draw.eventDetails,
+          eventDate: draw.eventDate ?? null,
+          eventTime: draw.eventTime ?? null,
           createdAt: draw.createdAt,
           archivedAt: draw.archivedAt,
           participants: participants.map((p) => ({
