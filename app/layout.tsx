@@ -11,7 +11,7 @@ const satoshi = localFont({
 
 export const metadata: Metadata = {
   title: "Awolve Secret Santa",
-  description: "Awolves Secret Santa. Öppna din länk och se vem du ska köpa julklapp till.",
+  description: "Awolves Secret Santa. Öppna din länk och se vem du är hemlig tomte åt.",
 };
 
 export const viewport: Viewport = {

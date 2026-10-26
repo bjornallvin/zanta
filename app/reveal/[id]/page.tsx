@@ -123,7 +123,7 @@ export default function RevealPage() {
 
         {view.kind === "sealed" && (
           <>
-            <p className="greeting">Hej {firstName(view.participantName)}! Du ska köpa julklapp till</p>
+            <p className="greeting">Hej {firstName(view.participantName)}! Du är hemlig tomte åt</p>
             <div className="slot">
               <button className="slab" onClick={handleReveal} disabled={view.busy}>
                 {view.busy ? (
@@ -148,7 +148,7 @@ export default function RevealPage() {
 
         {view.kind === "open" && (
           <>
-            <p className="greeting">{firstName(view.participantName)}, du ska köpa julklapp till</p>
+            <p className="greeting">{firstName(view.participantName)}, du är hemlig tomte åt</p>
             <div className="slot">
               <h1 className={`name${landed ? " landed" : ""}`}>
                 <Decode

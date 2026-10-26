@@ -79,6 +79,6 @@ export async function POST(
       participantName: participant.name,
     });
   } catch (error) {
-    return failure(error, "Det gick inte att visa vem du ska köpa till");
+    return failure(error, "Det gick inte att visa vem du är hemlig tomte åt");
   }
 }
