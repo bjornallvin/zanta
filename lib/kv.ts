@@ -227,13 +227,12 @@ export async function updateDraw(id: string, edit: DrawEdit): Promise<{ draw: Dr
 
 export class LateJoinerError extends Error {}
 
-// Adds one person to a draw without redrawing everyone. One volunteer, picked at random
-// from those who agreed to switch, now gives to the newcomer; the newcomer takes over the
-// volunteer's old match. Nobody else's match changes.
-// hasRevealed stays as it was on purpose: resetting it would show the admin which volunteer
-// was picked. A volunteer who already opened their link sees the new name when they reload it.
-// Returns the newcomer only, never who was picked.
-export async function addLateJoiner(drawId: string, name: string, volunteerIds: string[]): Promise<Participant> {
+// Adds one person to a draw without redrawing everyone. The volunteers (people who haven't
+// bought their gift and agreed to switch) and the newcomer share out the volunteers' old
+// matches plus the newcomer at random, so that every volunteer gets someone new and nobody
+// gets themselves. The volunteers get new links (their old ones stop working) and all of
+// them start unopened, so the admin view can't tell who got whom. Nobody else's match changes.
+export async function addLateJoiner(drawId: string, name: string, volunteerIds: string[]): Promise<Participant[]> {
   const draw = await getDraw(drawId);
   if (!draw) throw new DrawNotFoundError();
 
@@ -246,24 +245,45 @@ export async function addLateJoiner(drawId: string, name: string, volunteerIds: 
     throw new LateJoinerError("Välj minst en frivillig");
   }
 
-  const picked = volunteers[Math.floor(Math.random() * volunteers.length)];
-  const newcomer: Participant = {
-    id: generateUniqueId(),
-    drawId,
-    name,
-    assignedTo: picked.assignedTo,
-    hasRevealed: false,
+  // Volunteers get new ids (new links); everyone pointing at an old id follows the move
+  const newId = new Map(volunteers.map((v) => [v.id, generateUniqueId()]));
+  const remap = (id: string) => newId.get(id) ?? id;
+  const newcomerId = generateUniqueId();
+
+  const givers = [...volunteers.map((v) => ({ id: newId.get(v.id)!, old: remap(v.assignedTo) })), { id: newcomerId, old: null as string | null }];
+  const receivers = [...volunteers.map((v) => remap(v.assignedTo)), newcomerId];
+
+  // Random matching with: no one to themselves, no volunteer to their old person
+  let match: string[] | null = null;
+  for (let attempt = 0; attempt < 1000 && !match; attempt++) {
+    const candidate = shuffle(receivers);
+    if (candidate.every((r, i) => r !== givers[i].id && r !== givers[i].old)) match = candidate;
+  }
+  if (!match) {
+    throw new LateJoinerError("Det gick inte att hitta en ny fördelning. Välj fler frivilliga.");
+  }
+
+  const changed: Participant[] = [
+    ...volunteers.map((v, i) => ({ ...v, id: givers[i].id, assignedTo: match![i], hasRevealed: false })),
+    { id: newcomerId, drawId, name, assignedTo: match[givers.length - 1], hasRevealed: false },
+  ];
+  // People outside the swap who give to a volunteer: point them at the volunteer's new id
+  const others = participants
+    .filter((p) => !newId.has(p.id) && newId.has(p.assignedTo))
+    .map((p) => ({ ...p, assignedTo: remap(p.assignedTo) }));
+
+  const updated: Draw = {
+    ...draw,
+    participantIds: [...draw.participantIds.map(remap), newcomerId],
   };
-  const updatedPicked: Participant = { ...picked, assignedTo: newcomer.id };
-  const updated: Draw = { ...draw, participantIds: [...draw.participantIds, newcomer.id] };
 
   const tx = kv.multi();
-  tx.set(PARTICIPANT_KEY(newcomer.id), newcomer);
-  tx.set(PARTICIPANT_KEY(picked.id), updatedPicked);
+  for (const p of [...changed, ...others]) tx.set(PARTICIPANT_KEY(p.id), p);
+  for (const oldId of newId.keys()) tx.del(PARTICIPANT_KEY(oldId));
   tx.set(DRAW_KEY(drawId), updated);
   await tx.exec();
 
-  return newcomer;
+  return changed;
 }
 
 // Gives everyone a new link and a new match; the old links stop working.

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { addLateJoiner, DrawNotFoundError, LateJoinerError } from "@/lib/kv";
 import { requireAdmin } from "@/lib/auth";
 
-// Adds one person to a draw by moving one volunteer's match. The response holds the
-// newcomer's link only, never which volunteer was picked.
+// Adds one person to a draw by reshuffling the volunteers' matches. The response holds the
+// new links of the volunteers and the newcomer, never who gives to whom.
 export async function POST(request: NextRequest) {
   const denied = requireAdmin(request);
   if (denied) return denied;
@@ -21,8 +21,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Välj minst en frivillig" }, { status: 400 });
     }
 
-    const newcomer = await addLateJoiner(drawId, name.trim(), volunteerIds);
-    return NextResponse.json({ success: true, participantId: newcomer.id });
+    const changed = await addLateJoiner(drawId, name.trim(), volunteerIds);
+    // Names and new links only, never who gives to whom
+    return NextResponse.json({ success: true, links: changed.map((p) => ({ name: p.name, id: p.id })) });
   } catch (error) {
     if (error instanceof DrawNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });

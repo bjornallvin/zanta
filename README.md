@@ -94,10 +94,10 @@ Archived draws can be made active again; making one active archives the current 
 Any draw can be deleted for good.
 
 **Late joiner:** on the active draw, "Lägg till en person i efterhand" adds one person without a new draw.
-Tick the people who haven't bought their gift and can switch. One of them is picked at random and gives
-to the newcomer; the newcomer takes over that person's old match. Nobody else changes, and the admin
-never sees who was picked (the "opened" state is left alone for the same reason). Ask every volunteer
-to open their link again: the picked one sees the new name.
+Tick the people who haven't bought their gift and can switch. The volunteers and the newcomer share out
+the volunteers' old matches plus the newcomer at random: every volunteer gets someone new, nobody gets
+themselves. The volunteers get new links (old ones stop working) and start unopened. Nobody else changes,
+and the admin never sees who got whom. Send the new links to the volunteers and the newcomer.
 
 ### For Participants
 

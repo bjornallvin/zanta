@@ -239,7 +239,7 @@ export default function SetupPage() {
     if (!name || volunteers.length === 0) return;
     if (
       !confirm(
-        `Lägg till ${name}? En av de ${volunteers.length} frivilliga väljs i hemlighet och får ${name} i stället. Ingen annan påverkas.`
+        `Lägg till ${name}? De ${volunteers.length} frivilliga och ${name} får nya länkar och var sin ny person. Deras gamla länkar slutar fungera. Ingen annan påverkas.`
       )
     )
       return;
@@ -248,7 +248,7 @@ export default function SetupPage() {
     await changeDraw(
       "/api/add-late-joiner",
       { drawId: draw.id, name, volunteerIds: volunteers },
-      `${name} är med. Kopiera ${name}s länk nedan. Be alla frivilliga öppna sin länk igen: den som valdes ser sin nya person där.`,
+      `${name} är med. Skicka de nya länkarna nedan till ${name} och de frivilliga: deras gamla länkar fungerar inte längre.`,
       { kind: "draw", id: draw.id }
     );
   };
@@ -408,8 +408,8 @@ export default function SetupPage() {
             <section className="section" aria-labelledby="late-title">
               <h2 id="late-title" className="section-title">Lägg till en person i efterhand</h2>
               <p className="fine" style={{ marginTop: "0.5rem", marginBottom: "1.5rem" }}>
-                Ingen ny dragning. Kryssa i de som inte har köpt sin julklapp och kan byta. En av dem väljs i hemlighet
-                och köper till den nya personen, som tar över hens gamla match. Ingen, inte ens du, får veta vem.
+                Ingen ny dragning. Kryssa i de som inte har köpt sin julklapp och kan byta. De och den nya personen får
+                nya länkar och var sin ny person. Alla andra behåller sin match. Ingen, inte ens du, får veta vem som fick vem.
               </p>
               <label className="field">
                 <span className="field-label">Namn</span>
