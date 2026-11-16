@@ -93,6 +93,12 @@ Any draw can be edited. "Reset links" gives everyone new links and matches; the 
 Archived draws can be made active again; making one active archives the current one.
 Any draw can be deleted for good.
 
+**Late joiner:** on the active draw, "Lägg till en person i efterhand" adds one person without a new draw.
+Tick the people who haven't bought their gift and can switch. One of them is picked at random and gives
+to the newcomer; the newcomer takes over that person's old match. Nobody else changes, and the admin
+never sees who was picked (the "opened" state is left alone for the same reason). Ask every volunteer
+to open their link again: the picked one sees the new name.
+
 ### For Participants
 
 1. Open their own link
@@ -119,6 +125,7 @@ Any draw can be deleted for good.
 │   │   ├── activate-draw/        # make an archived draw active (admin)
 │   │   ├── update-draw/          # edit a draw (admin)
 │   │   ├── reset-draw/           # new links and matches, old links die (admin)
+│   │   ├── add-late-joiner/      # add one person by moving one volunteer's match (admin)
 │   │   ├── delete-draw/          # delete a draw (admin)
 │   │   └── reveal/[id]/          # read or reveal one person's match
 │   ├── setup-secret-santa/

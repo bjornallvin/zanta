@@ -76,6 +76,8 @@ export default function SetupPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [lateName, setLateName] = useState("");
+  const [volunteers, setVolunteers] = useState<string[]>([]);
 
   const lock = (text: string) => {
     storePassword(null);
@@ -232,6 +234,25 @@ export default function SetupPage() {
     });
   };
 
+  const handleLateJoiner = async (draw: DrawSummary) => {
+    const name = lateName.trim();
+    if (!name || volunteers.length === 0) return;
+    if (
+      !confirm(
+        `Lägg till ${name}? En av de ${volunteers.length} frivilliga väljs i hemlighet och får ${name} i stället. Ingen annan påverkas.`
+      )
+    )
+      return;
+    setLateName("");
+    setVolunteers([]);
+    await changeDraw(
+      "/api/add-late-joiner",
+      { drawId: draw.id, name, volunteerIds: volunteers },
+      `${name} är med. Kopiera ${name}s länk nedan. Be alla frivilliga öppna sin länk igen: den som valdes ser sin nya person där.`,
+      { kind: "draw", id: draw.id }
+    );
+  };
+
   const handleDelete = (draw: DrawSummary) => {
     if (!confirm("Radera dragningen för gott? Länkarna slutar fungera och den går inte att få tillbaka.")) return;
     changeDraw("/api/delete-draw", { drawId: draw.id }, "Dragningen är raderad.", { kind: "list" });
@@ -380,6 +401,42 @@ export default function SetupPage() {
                 ))}
               </ul>
 
+            </section>
+          )}
+
+          {active && (
+            <section className="section" aria-labelledby="late-title">
+              <h2 id="late-title" className="section-title">Lägg till en person i efterhand</h2>
+              <p className="fine" style={{ marginTop: "0.5rem", marginBottom: "1.5rem" }}>
+                Ingen ny dragning. Kryssa i de som inte har köpt sin julklapp och kan byta. En av dem väljs i hemlighet
+                och köper till den nya personen, som tar över hens gamla match. Ingen, inte ens du, får veta vem.
+              </p>
+              <label className="field">
+                <span className="field-label">Namn</span>
+                <input className="input" value={lateName} onChange={(e) => setLateName(e.target.value)} />
+              </label>
+              <fieldset className="field" style={{ border: 0, padding: 0 }}>
+                <legend className="field-label">Frivilliga</legend>
+                {selected.participants.map((p) => (
+                  <label key={p.id} style={{ display: "flex", gap: "0.5rem", alignItems: "center", padding: "0.25rem 0" }}>
+                    <input
+                      type="checkbox"
+                      checked={volunteers.includes(p.id)}
+                      onChange={(e) =>
+                        setVolunteers((v) => (e.target.checked ? [...v, p.id] : v.filter((x) => x !== p.id)))
+                      }
+                    />
+                    {p.name}
+                  </label>
+                ))}
+              </fieldset>
+              <button
+                className="btn btn-primary"
+                onClick={() => handleLateJoiner(selected)}
+                disabled={isLoading || !lateName.trim() || volunteers.length === 0}
+              >
+                Lägg till
+              </button>
             </section>
           )}
 

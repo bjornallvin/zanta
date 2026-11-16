@@ -225,6 +225,47 @@ export async function updateDraw(id: string, edit: DrawEdit): Promise<{ draw: Dr
   return { draw: updated, redrawn };
 }
 
+export class LateJoinerError extends Error {}
+
+// Adds one person to a draw without redrawing everyone. One volunteer, picked at random
+// from those who agreed to switch, now gives to the newcomer; the newcomer takes over the
+// volunteer's old match. Nobody else's match changes.
+// hasRevealed stays as it was on purpose: resetting it would show the admin which volunteer
+// was picked. A volunteer who already opened their link sees the new name when they reload it.
+// Returns the newcomer only, never who was picked.
+export async function addLateJoiner(drawId: string, name: string, volunteerIds: string[]): Promise<Participant> {
+  const draw = await getDraw(drawId);
+  if (!draw) throw new DrawNotFoundError();
+
+  const participants = await getParticipants(draw);
+  if (participants.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+    throw new LateJoinerError("Det finns redan en person med det namnet");
+  }
+  const volunteers = participants.filter((p) => volunteerIds.includes(p.id));
+  if (volunteers.length === 0) {
+    throw new LateJoinerError("Välj minst en frivillig");
+  }
+
+  const picked = volunteers[Math.floor(Math.random() * volunteers.length)];
+  const newcomer: Participant = {
+    id: generateUniqueId(),
+    drawId,
+    name,
+    assignedTo: picked.assignedTo,
+    hasRevealed: false,
+  };
+  const updatedPicked: Participant = { ...picked, assignedTo: newcomer.id };
+  const updated: Draw = { ...draw, participantIds: [...draw.participantIds, newcomer.id] };
+
+  const tx = kv.multi();
+  tx.set(PARTICIPANT_KEY(newcomer.id), newcomer);
+  tx.set(PARTICIPANT_KEY(picked.id), updatedPicked);
+  tx.set(DRAW_KEY(drawId), updated);
+  await tx.exec();
+
+  return newcomer;
+}
+
 // Gives everyone a new link and a new match; the old links stop working.
 // Names, budget and details stay.
 export async function resetDraw(id: string): Promise<Draw> {
